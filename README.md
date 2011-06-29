@@ -5,7 +5,7 @@
 `tapper-autoreport` is a "bash include file" you can add ("source") at
 the end of your own bash script.
 
-It then magically turns your bash script into an "**Tapper test
+It then magically turns your bash script into a "**Tapper test
 suite**".
 
 It also allows your bash script to be executed locally via the `prove`
@@ -14,7 +14,7 @@ command, a standard tool to run test scripts that produce TAP output
 framework.
 
 Due to that and no other external dependecies it's a good starting
-point to write actual **function tests* that are reusable.
+point to write actual **function tests** that are reusable.
 
 It collects meta information from system, reports test results and can
 upload logs and other files over network to a

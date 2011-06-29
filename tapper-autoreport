@@ -452,11 +452,20 @@ tapper_section_meta() {
     fi
 }
 
+tapper_help () {
+    echo "tapper-autoreport"
+    echo ""
+    echo "For more info please see"
+    echo "  https://github.com/amd/Tapper-autoreport/blob/master/autoreport-manual.md"
+    echo ""
+}
+
 # =====================================================
 
 # up to here functions are sourced by test scripts
 
 [ "$1" == "--import-utils" ] && return 0
+[ "$1" == "--help" ] && tapper_help && exit 0
 
 # ===== param evaluation ==============================
 
