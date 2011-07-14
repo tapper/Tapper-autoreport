@@ -321,7 +321,7 @@ planningid=${PLANNINGID:-""}
 # - cpuinfo
 # - kernel config
 reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-}}
-reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /boot/config-`uname -r` ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /boot/config-`uname -r` ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
 
 if [ ! "$reportgroup_testrun" ] ; then
     reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
