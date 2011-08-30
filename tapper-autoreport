@@ -313,6 +313,7 @@ PROCCONFIG="/proc/config.gz"
 ticketurl=${TICKETURL:-""}
 wikiurl=${WIKIURL:-""}
 planningid=${PLANNINGID:-""}
+moreinfourl=${MOREINFOURL:-""}
 
 # group reports with similar environment:
 # - hostname
@@ -347,6 +348,9 @@ tapper_suite_meta() {
     fi
     if [ -n "$planningid" ] ; then
         echo "# Tapper-planning-id:              $planningid";
+    fi
+    if [ -n "$moreinfourl" ] ; then
+        echo "# Tapper-moreinfo-url:             $moreinfourl";
     fi
 }
 
