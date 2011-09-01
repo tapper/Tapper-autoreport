@@ -440,6 +440,8 @@ tapper_section_meta() {
 
 if [ x"$HARNESS_ACTIVE" == x"1" ] ; then
     NOSEND=1
+else
+    require_program "netcat"
 fi
 
 EXITCODE=0
