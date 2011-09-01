@@ -60,12 +60,6 @@ cpu_family_max () {
     [ $(($fam)) -le $(($max)) ]
 }
 
-autoreport_skip_all () {
-    explanation="${1:-'no explanation'}"
-    SKIPALL="1..0 # skip $explanation"
-    NOSEND=1
-}
-
 # stops testscript if not matching required cpu family from
 # /proc/cpuinfo of a minimum/maximum range
 require_amd_family_range () {
@@ -176,6 +170,12 @@ first_file () {
             return
         fi
     done
+}
+
+autoreport_skip_all () {
+    explanation="${1:-'no explanation'}"
+    SKIPALL="1..0 # skip $explanation"
+    NOSEND=1
 }
 
 # ==================== TAP utils ====================
