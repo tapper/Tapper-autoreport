@@ -281,7 +281,7 @@ kernelrelease=`uname -r`
 # ===== suite name ==================
 
 SUITEKEYWORDS=$(for k in $KEYWORDS ; do echo $k ; done | sort | paste -sd-)
-myname=$(echo $(basename $0 | sed -e 's/\.\w*$//i')${SUITEKEYWORDS:+-$SUITEKEYWORDS} | sed -e "s/^tapper-//" | sed -e "s/^artemis-//" )
+myname=$(echo $(basename -- $0 | sed -e 's/\.\w*$//i')${SUITEKEYWORDS:+-$SUITEKEYWORDS} | sed -e "s/^tapper-//" | sed -e "s/^artemis-//" )
 
 SUITE=${myname:-autoreport}
 VERSION=3.001
