@@ -236,7 +236,7 @@ lower_case () {
 }
 
 get_random_number () {
-    range_max="${1:-}"
+    range_max="${1:-32768}"
     number=$RANDOM
     let "number %= $range_max"
     echo "$number"
