@@ -162,7 +162,7 @@ require_root () {
     fi
 }
 
-first_file () {
+get_first_file () {
     for i in $(seq 1 $#) ; do
         file=${!i}
         if [ -r "$file" ] ; then
