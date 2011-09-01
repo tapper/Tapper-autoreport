@@ -242,8 +242,18 @@ get_random_number () {
     echo "$number"
 }
 
+get_kernel_release_1 () {
+    number=$(uname -r | sed 's/\([0-9]\)\.[0-9]\+\.[0-9]\+.*/\1/')
+    echo "$number"
+}
+
+get_kernel_release_2 () {
+    number=$(uname -r | sed 's/[0-9]\.\([0-9]\+\)\.[0-9]\+.*/\1/')
+    echo "$number"
+}
+
 get_kernel_release_3 () {
-    number=$(uname -r |sed 's/2\.6\.\([0-9]\+\).*/\1/')
+    number=$(uname -r | sed 's/[0-9]\.[0-9]\+\.\([0-9]\+\).*/\1/')
     echo "$number"
 }
 
@@ -255,14 +265,63 @@ kernel_release_min () {
     return 1
 }
 
-require_kernel_release_min () {
+kernel_release_min_1 () {
+    # check if current LK 1st level release number is greater or equal release_req
+    release_req="${1:-}"
+    [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
+    [ $(get_kernel_release_1) -ge "$release_req" ] && return 0
+    return 1
+}
+
+kernel_release_min_2 () {
+    # check if current LK 1st level release number is greater or equal release_req
+    release_req="${1:-}"
+    [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
+    [ $(get_kernel_release_2) -ge "$release_req" ] && return 0
+    return 1
+}
+
+kernel_release_min_3 () {
+    # check if current LK 1st level release number is greater or equal release_req
+    release_req="${1:-}"
+    [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
+    [ $(get_kernel_release_2) -ge "$release_req" ] && return 0
+    return 1
+}
+
+require_kernel_release_min_1 () {
     # exit 0 if current LK release is less than required 3rd level version number
     release_req="${1:-}"
-    if kernel_release_min "$release_req"; then
+    if kernel_release_min_1 "$release_req"; then
         return 0
     else
-        autoreport_skip_all "Linux Kernel must be newer than 2.6.$LK_MIN"
+        autoreport_skip_all "Linux Kernel must be newer than ${release_re}.x.x"
     fi
+}
+
+require_kernel_release_min_2 () {
+    # exit 0 if current LK release is less than required 2nd level version number
+    release_req="${1:-}"
+    if kernel_release_min_2 "$release_req"; then
+        return 0
+    else
+        autoreport_skip_all "Linux Kernel must be newer than x.${release_re}.x"
+    fi
+}
+
+require_kernel_release_min_3 () {
+    # exit 0 if current LK release is less than required 3rd level version number
+    release_req="${1:-}"
+    if kernel_release_min_3 "$release_req"; then
+        return 0
+    else
+        autoreport_skip_all "Linux Kernel must be newer than x.x-${release_re}"
+    fi
+}
+
+# backwards compat form for 2.6.* kernel times
+require_kernel_release_min () {
+    require_kernel_release_min_3 "$release_req"
 }
 
 is_element_in_list () {
