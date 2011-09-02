@@ -41,9 +41,10 @@ vendor_amd () {
 }
 
 # outputs cpu family from /proc/cpuinfo
+# since all testsuites using hex values, return value in hex format
 get_cpu_family () {
     fam=$(echo $(grep family /proc/cpuinfo |head -1|cut -d: -f2))
-    echo $fam
+    echo "0x"$(get_hex_from_int $fam)
 }
 
 # checks cpu family from /proc/cpuinfo against a minimum family
