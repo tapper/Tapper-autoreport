@@ -345,7 +345,7 @@ is_element_in_list () {
 
 # ===== kernel details ==================
 
-kernelrelease=`uname -r`
+kernelrelease=$(uname -r)
 
 # ===== suite name ==================
 
@@ -370,8 +370,8 @@ ram=$(free -m | grep -i mem: | awk '{print $2}'MB)
 starttime_test_program=$(date --rfc-2822)
 bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
 cpuinfo=$(
-    cpu=`grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//"`;
-    cpucount=`grep 'model name' < /proc/cpuinfo | wc -l`;
+    cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
+    cpucount=$(grep 'model name' < /proc/cpuinfo | wc -l);
     echo "$cpucount cores [$cpu]";
 )
 # TODO: bogomips from /proc/cpuinfo
@@ -391,7 +391,7 @@ moreinfourl=${MOREINFOURL:-""}
 # - cpuinfo
 # - kernel config
 reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-}}
-reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /boot/config-`uname -r` ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /boot/config-$(uname -r) ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
 
 if [ ! "$reportgroup_testrun" ] ; then
     reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
@@ -646,7 +646,7 @@ autoreport_start () {
     fi
 
     if [ ! "x1" = "x$NOSEND" ] ; then
-        NETCAT=`which netcat || which nc`
+        NETCAT=$(which netcat || which nc)
         # does it provide -q option
         if $NETCAT -h 2>&1 |grep -q -- '-q.*quit' ; then
             NETCAT="$NETCAT -q7"
