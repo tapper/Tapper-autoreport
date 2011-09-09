@@ -72,7 +72,8 @@ require_amd_family_range () {
     else
         vendor=$(get_vendor);
         fam=$(get_cpu_family);
-        autoreport_skip_all "Family $vendor/$fam does not match AMD/$min..$max"
+        explanation="${3:-Family $vendor/$fam does not match AMD/$min..$max}"
+        autoreport_skip_all "$explanation"
     fi
 }
 
@@ -87,10 +88,11 @@ has_l3cache () {
 
 # stops testscript if cpu does not have L3 cache
 require_l3cache () {
+    explanation="${1:-No L3 cache}"
     if has_l3cache ; then
         return 0
     else
-        autoreport_skip_all "No L3 cache"
+        autoreport_skip_all "$explanation"
     fi
 }
 
@@ -107,10 +109,11 @@ has_cpufeature () {
 # stops testscript if a feature flag is not found in /proc/cpuinfo
 require_cpufeature () {
     feature="${1:-UNKNOWNFEATURE}"
+    explanation="${2:-Missing cpufeature $feature}"
     if has_cpufeature "$feature" ; then
         return 0
     else
-        autoreport_skip_all "Missing cpufeature $feature"
+        autoreport_skip_all "$explanation"
     fi
 }
 
@@ -127,10 +130,11 @@ has_cpbdisable () {
 
 # stops testscript if the cpbdisable file does not exist in sysfs
 require_cpbdisable () {
+    explanation="${1:-No CPB disable}"
     if has_cpbdisable ; then
         return 0
     else
-        autoreport_skip_all "No CPB disable"
+        autoreport_skip_all "$explanation"
     fi
 }
 
@@ -147,19 +151,21 @@ has_program () {
 # stops testscript if program not available
 require_program () {
     program="${1:-UNKNOWNPROGRAM}"
+    explanation="${2:-Missing program $program}"
     if has_program "$program" ; then
         return 0
     else
-        autoreport_skip_all "Missing program $program"
+        autoreport_skip_all "$explanation"
     fi
 }
 
 require_root () {
+    explanation="${1:-Need to run as root}"
     ID=$(id|cut -d" " -f1|cut -d= -f2|cut -d\( -f1)
     if [ "x$ID" == "x0" ] ; then
         return 0
     else
-        autoreport_skip_all "Need to run as root"
+        autoreport_skip_all "$explanation"
     fi
 }
 
@@ -293,30 +299,33 @@ kernel_release_min_3 () {
 require_kernel_release_min_1 () {
     # exit 0 if current LK release is less than required 3rd level version number
     release_req="${1:-}"
+    explanation="${2:-Linux Kernel must be newer than ${release_req}.x.x}"
     if kernel_release_min_1 "$release_req"; then
         return 0
     else
-        autoreport_skip_all "Linux Kernel must be newer than ${release_re}.x.x"
+        autoreport_skip_all "$explanation"
     fi
 }
 
 require_kernel_release_min_2 () {
     # exit 0 if current LK release is less than required 2nd level version number
     release_req="${1:-}"
+    explanation="${2:-Linux Kernel must be newer than x.${release_req}.x}"
     if kernel_release_min_2 "$release_req"; then
         return 0
     else
-        autoreport_skip_all "Linux Kernel must be newer than x.${release_re}.x"
+        autoreport_skip_all "$explanation"
     fi
 }
 
 require_kernel_release_min_3 () {
     # exit 0 if current LK release is less than required 3rd level version number
     release_req="${1:-}"
+    explanation="${2:-Linux Kernel must be newer than x.x-${release_req}}"
     if kernel_release_min_3 "$release_req"; then
         return 0
     else
-        autoreport_skip_all "Linux Kernel must be newer than x.x-${release_re}"
+        autoreport_skip_all "$explanation"
     fi
 }
 
