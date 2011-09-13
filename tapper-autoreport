@@ -459,9 +459,7 @@ OK=1
 FILECOUNT=0
 
 # do not implicitely upload files like kernel config
-NOUPLOAD=0
-
-REPORTERNAME=
+noupload=${NOUPLOAD:-0}
 
 # extend that list with usernames that should magically be recognized
 # as test owner when listing them as argument
