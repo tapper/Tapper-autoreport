@@ -182,7 +182,7 @@ get_first_file () {
 autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
-    NOSEND=1
+    NOUPLOAD=1
 }
 
 # ==================== TAP utils ====================
@@ -558,7 +558,7 @@ autoreport_main() {
         echo "$SKIPALL"
         tapper_suite_meta
         tapper_section_meta
-        export NOSEND=1
+        export NOUPLOAD=1
         return
     fi
 
