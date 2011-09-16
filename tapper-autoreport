@@ -159,6 +159,18 @@ require_program () {
     fi
 }
 
+# stops testscript if netcat not available
+require_netcat () {
+    explanation="${2:-Missing program netcat}"
+    if has_program "netcat" ; then
+        return 0
+    elif has_program "nc" ; then
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 require_root () {
     explanation="${1:-Need to run as root}"
     ID=$(id|cut -d" " -f1|cut -d= -f2|cut -d\( -f1)
@@ -451,7 +463,7 @@ tapper_section_meta() {
 if [ x"$HARNESS_ACTIVE" == x"1" ] ; then
     NOSEND=1
 else
-    require_program "netcat"
+    require_netcat
 fi
 
 EXITCODE=0
@@ -541,7 +553,7 @@ upload_files() {
             echo -n " ($filetype)" 1>&2
         fi
         echo " ..." 1>&2
-        ( 
+        (
             echo "#! upload $reportid $file $filetype"
             cat $file
         ) | $MYNETCAT
