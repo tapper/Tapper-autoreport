@@ -122,6 +122,33 @@ require_cpufeature () {
     fi
 }
 
+# checks for a config in /proc/config.gz or /boot/config/`uname -r`
+has_kernel_config () {
+    feature="${1:-UNKNOWNFEATURE}"
+    CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
+    if echo $CONFIG | grep -q '\.gz' ; then
+        echo GZIPPED
+        tempfile=$(tempfile)
+        gunzip < $CONFIG > $tempfile
+        CONFIG=$tempfile
+    fi
+    grep -q "^${feature}=." $CONFIG
+    SUCC=$?
+    if [ -f $tempfile ] ; then rm -f -- "$tempfile" ; fi
+    return $SUCC
+}
+
+# stops testscript if a feature flag is not found in /proc/cpuinfo
+require_kernel_config () {
+    feature="${1:-UNKNOWNFEATURE}"
+    explanation="${2:-Missing kernel config $feature}"
+    if has_kernel_config "$feature" ; then
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # checks whether the cpbdisable file exists in sysfs
 has_cpbdisable () {
     # This file's existence is not the best check.
