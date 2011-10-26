@@ -63,5 +63,5 @@ server:
 ### More info
 
 For more info please read
-[http://github.com/amd/Tapper-autoreport/autoreport-manual.md](autoreport
+[https://github.com/amd/Tapper-autoreport/blob/master/autoreport-manual.md](autoreport
 manual).
