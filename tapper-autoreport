@@ -379,7 +379,13 @@ suite_version=${SUITEVERSION:-$VERSION}
 hostname=${HOSTNAME:-$(hostname)}
 reportername=${REPORTERNAME:-$USER}
 
-osname=${OSNAME:-$(cat /etc/issue.net | head -1)}
+if [ -e /etc/issue.net ]
+then
+	osname=${OSNAME:-$(cat /etc/issue.net | head -1)}
+else
+	osname=${OSNAME:-$(uname -o)}
+fi
+
 changeset=${CHANGESET:-$(cat /proc/version | head -1)}
 kernelflags=$(cat /proc/cmdline)
 uname=$(uname -a)
