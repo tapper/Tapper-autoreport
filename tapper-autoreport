@@ -40,6 +40,11 @@ vendor_amd () {
     grep -Eq 'vendor_id.*:.*AMD' /proc/cpuinfo
 }
 
+# Checks for ARM cpu
+arm_cpu () {
+    grep -Eqi 'Processor.*:.*ARM' /proc/cpuinfo
+}
+
 # outputs cpu family from /proc/cpuinfo
 # since all testsuites using hex values, return value in hex format
 get_cpu_family () {
@@ -382,8 +387,13 @@ ram=$(free -m | grep -i mem: | awk '{print $2}'MB)
 starttime_test_program=$(date --rfc-2822)
 bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
 cpuinfo=$(
-    cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
-    cpucount=$(grep 'model name' < /proc/cpuinfo | wc -l);
+    if arm_cpu
+    then
+        cpu=$(grep 'Processor' < /proc/cpuinfo | cut -d: -f2- |head -1 | cut -d" " -f2);
+    else
+        cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
+    fi
+    cpucount=$(grep 'processor.*:' < /proc/cpuinfo | wc -l);
     echo "$cpucount cores [$cpu]";
 )
 # TODO: bogomips from /proc/cpuinfo
