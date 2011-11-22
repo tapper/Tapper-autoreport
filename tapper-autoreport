@@ -398,7 +398,12 @@ cpuinfo=$(
 )
 # TODO: bogomips from /proc/cpuinfo
 
-BOOTCONFIG="/boot/config-$kernelrelease"
+if [ -e "/boot/config-$kernelrelease" ]
+then
+	BOOTCONFIG="/boot/config-$kernelrelease"
+else
+	BOOTCONFIG=
+fi
 PROCCONFIG="/proc/config.gz"
 
 ticketurl=${TICKETURL:-""}
@@ -413,7 +418,7 @@ moreinfourl=${MOREINFOURL:-""}
 # - cpuinfo
 # - kernel config
 reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-}}
-reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /boot/config-$(uname -r) ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
 
 if [ ! "$reportgroup_testrun" ] ; then
     reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
@@ -512,7 +517,7 @@ done
 
 if [ ! "$NOUPLOAD" ] ; then
     if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
-        if [ -e "$BOOTCONFIG" ] ; then
+        if [ -n "$BOOTCONFIG" ] ; then
             FILES[$FILECOUNT]="$BOOTCONFIG"
             let FILECOUNT=FILECOUNT+1
         fi
