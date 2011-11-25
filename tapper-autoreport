@@ -399,7 +399,7 @@ cpuinfo=$(
     else
         cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
     fi
-    cpucount=$(grep 'processor.*:' < /proc/cpuinfo | wc -l);
+    cpucount=$(grep -i 'bogomips.*:' < /proc/cpuinfo | wc -l);
     echo "$cpucount cores [$cpu]";
 )
 # TODO: bogomips from /proc/cpuinfo
