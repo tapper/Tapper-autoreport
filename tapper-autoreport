@@ -127,6 +127,116 @@ require_l3cache () {
     fi
 }
 
+# check if we are in a Xen guest
+# Note:
+#   In Xen the dom0 reports the same 'hypervisor' flag and CPUID entry
+#   as in domU therefore the CPUID check is not enough, but dmidecode
+#   and lspci show different devices inside a domU.
+is_running_in_xen_guest () {
+    SUCC=1
+
+    # try dmidecode
+    if dmidecode > /dev/null 2>&1 ; then
+        dmidecode -s chassis-manufacturer | grep -q Xen
+        SUCC=$?
+    else
+        # try lspci
+        if lspci > /dev/null 2>&1 ; then
+            lspci | grep -q Xen
+            SUCC=$?
+        fi
+    fi
+    return $SUCC
+}
+
+
+# check if we are in a KVM guest
+# Note:
+#   In KVM the hypervisor CPUID check is relieable and we can first
+#   narrow it against being not a Xen guest. After that the devices
+#   are less significant in KVM so here we then check for the CPUID.
+is_running_in_kvm_guest () {
+    SUCC=1
+
+    # try dmidecode
+    if grep -Eqi "^flags.*:.*hypervisor" /proc/cpuinfo ; then
+        if ! is_running_in_xen_guest ; then
+            if modprobe cpuid > /dev/null 2>&1 ; then
+                CPUID=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 status=noxfer 2> /dev/null)
+                if echo $CPUID | grep -q KVM ; then
+                    SUCC=0
+                fi
+            fi
+        fi
+    fi
+    return $SUCC
+}
+
+# check for Tapper automation guest environment
+is_running_in_tapper_guest () {
+    SUCC=1
+    if [ -n "$TAPPER_GUESTNUMBER" ] ; then
+        if [ $TAPPER_GUESTNUMBER -gt 0 ] ; then
+            SUCC=0
+        fi
+    fi
+    return $SUCC
+}
+
+# check if we are in a virtualized guest (Xen or KVM)
+# Note:
+#   We could combine the _tapper_guest checking in here but I wanted
+#   to keep the "real detection" separated from the "artificial
+#   definition" that TAPPER_* environment variables represent.
+is_running_in_virtualized_guest () {
+    is_running_in_xen_guest || is_running_in_kvm_guest
+    return $?
+}
+
+# stops testscript if we aren't a Xen guest
+require_running_in_xen_guest () {
+    explanation="${1:-Needs to run in Xen guest}"
+    if is_running_in_xen_guest ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_xen_guest" ; fi
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if we aren't a KVM guest
+require_running_in_kvm_guest () {
+    explanation="${1:-Needs to run in KVM guest}"
+    if is_running_in_kvm_guest ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_kvm_guest" ; fi
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if we aren't a virtualized guest
+require_running_in_virtualized_guest () {
+    explanation="${1:-Needs to run in virtualized guest}"
+    if is_running_in_virtualized_guest ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_virtualized_guest" ; fi
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if we aren't a Tapper automation guest environment
+require_running_in_tapper_guest () {
+    explanation="${1:-Needs to run in Tapper guest}"
+    if is_running_in_tapper_guest ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_tapper_guest" ; fi
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # checks for a feature flag in /proc/cpuinfo
 has_cpufeature () {
     feature="${1:-UNKNOWNFEATURE}"
