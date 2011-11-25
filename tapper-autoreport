@@ -540,6 +540,12 @@ VERSION=3.002
 suite_name=${SUITENAME:-$(echo $SUITE)}
 suite_version=${SUITEVERSION:-$VERSION}
 hostname=${HOSTNAME:-$(hostname)}
+# combined machine name in Tapper automation guest environment
+if is_running_in_tapper_guest ; then
+    if [ "x$TAPPER_HOSTNAME" != "x" ] ; then
+        hostname="${TAPPER_HOSTNAME}:$hostname"
+    fi
+fi
 reportername=${REPORTERNAME:-$USER}
 
 if [ -e /etc/issue.net ]
