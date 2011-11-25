@@ -16,6 +16,8 @@
 
 . ./tapper-autoreport --import-utils
 
+require_program bc
+
 TAP[0]="ok - autoreport selftest"
 TAP[1]="ok - some other description"
 append_tap "ok - the simplest of all tests"
