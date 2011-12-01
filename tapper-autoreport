@@ -40,6 +40,11 @@ vendor_amd () {
     grep -Eq 'vendor_id.*:.*AMD' /proc/cpuinfo
 }
 
+# Checks for ARM cpu
+arm_cpu () {
+    grep -Eqi 'Processor.*:.*ARM' /proc/cpuinfo
+}
+
 # outputs cpu family from /proc/cpuinfo
 # since all testsuites using hex values, return value in hex format
 get_cpu_family () {
@@ -374,7 +379,13 @@ suite_version=${SUITEVERSION:-$VERSION}
 hostname=${HOSTNAME:-$(hostname)}
 reportername=${REPORTERNAME:-$USER}
 
-osname=${OSNAME:-$(cat /etc/issue.net | head -1)}
+if [ -e /etc/issue.net ]
+then
+	osname=${OSNAME:-$(cat /etc/issue.net | head -1)}
+else
+	osname=${OSNAME:-$(uname -o)}
+fi
+
 changeset=${CHANGESET:-$(cat /proc/version | head -1)}
 kernelflags=$(cat /proc/cmdline)
 uname=$(uname -a)
@@ -382,13 +393,23 @@ ram=$(free -m | grep -i mem: | awk '{print $2}'MB)
 starttime_test_program=$(date --rfc-2822)
 bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
 cpuinfo=$(
-    cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
-    cpucount=$(grep 'model name' < /proc/cpuinfo | wc -l);
+    if arm_cpu
+    then
+        cpu=$(grep 'Processor' < /proc/cpuinfo | cut -d: -f2- |head -1 | cut -d" " -f2);
+    else
+        cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
+    fi
+    cpucount=$(grep -i 'bogomips.*:' < /proc/cpuinfo | wc -l);
     echo "$cpucount cores [$cpu]";
 )
 # TODO: bogomips from /proc/cpuinfo
 
-BOOTCONFIG="/boot/config-$kernelrelease"
+if [ -e "/boot/config-$kernelrelease" ]
+then
+	BOOTCONFIG="/boot/config-$kernelrelease"
+else
+	BOOTCONFIG=
+fi
 PROCCONFIG="/proc/config.gz"
 
 ticketurl=${TICKETURL:-""}
@@ -403,7 +424,7 @@ moreinfourl=${MOREINFOURL:-""}
 # - cpuinfo
 # - kernel config
 reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-}}
-reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /boot/config-$(uname -r) ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
 
 if [ ! "$reportgroup_testrun" ] ; then
     reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
@@ -511,7 +532,7 @@ done
 
 if [ ! "$NOUPLOAD" ] ; then
     if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
-        if [ -e "$BOOTCONFIG" ] ; then
+        if [ -n "$BOOTCONFIG" ] ; then
             FILES[$FILECOUNT]="$BOOTCONFIG"
             let FILECOUNT=FILECOUNT+1
         fi
