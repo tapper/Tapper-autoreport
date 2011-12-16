@@ -331,6 +331,29 @@ require_program () {
     fi
 }
 
+# checks whether the file is available
+has_file () {
+    file="${1:-UNKNOWNFILE}"
+    explanation="${2:-Missing file $file}"
+    if [ -e "$file" ] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# stops testscript if file not available
+require_file () {
+    file="${1:-UNKNOWNFILE}"
+    explanation="${2:-Missing file $file}"
+    if has_file "$file" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_file $file" ; fi
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # stops testscript if netcat not available
 require_netcat () {
     explanation="${2:-Missing program netcat}"
