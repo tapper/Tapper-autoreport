@@ -40,6 +40,30 @@ vendor_amd () {
     grep -Eq 'vendor_id.*:.*AMD' /proc/cpuinfo
 }
 
+# stops testscript if not matching required cpu vendor
+require_vendor_intel () {
+    if vendor_intel
+    then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_vendor_intel" ; fi
+        return 0
+    else
+        explanation="${1:-vendor does not match Intel}"
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if not matching required cpu vendor
+require_vendor_amd () {
+    if vendor_amd
+    then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_vendor_amd" ; fi
+        return 0
+    else
+        explanation="${1:-vendor does not match AMD}"
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # Checks for ARM cpu
 arm_cpu () {
     grep -Eqi 'Processor.*:.*ARM' /proc/cpuinfo
