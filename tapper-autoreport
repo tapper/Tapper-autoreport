@@ -440,6 +440,11 @@ is_element_in_list () {
     return $result
 }
 
+# ===== control variables defaults ==================
+
+# by default reuiqre_* functions generate TAP ok lines
+REQUIRES_GENERATE_TAP=${REQUIRES_GENERATE_TAP:-1}
+
 # ===== kernel details ==================
 
 kernelrelease=$(uname -r)
