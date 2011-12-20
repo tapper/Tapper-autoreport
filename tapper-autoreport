@@ -523,15 +523,22 @@ normalize_version_number () {
         A3=$(echo $A | sed -e 's/^\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\3/')
         Anormalized=$(bc -lq <(echo "scale=6; $A1+($A2/1000)+($A3/1000000); halt"))
     else
-        if echo $A | grep -qE '^[0-9]+\.[0-9]{1,6}$' ; then
-            A1=$(echo $A | perl -pne 's/^([0-9]+)\.([0-9]{1,3})([0-9]{1,3}).*/\1/')
-            zeros=$(echo -n $A | perl -ne 's/^([0-9]+)\.(0*).*/$2/; print length')
-            echo "{$A -> $A1 / $zeros / }"
-            Anormalized=$(bc -lq <(echo "scale=6; $A1+(($A-$A1)/10^$zeros); halt"))
-            echo "* tuple: $A -> $Anormalized" 1>&2
-        else
+        # if echo $A | grep -qE '^[0-9]+\.[0-9]{6}$' ; then
+        #     # On single dots we assume the after-dot part (the 100s)
+        #     # matches the after-first-dot part in 2-dot semantics and
+        #     # we shift that after-dot part left by amount of leading
+        #     # zeros.
+        #     A1=$(echo $A | perl -pne 's/^([0-9]+)\.[0-9]{1,3}[0-9]{1,3}.*/\1/')
+        #     A2=$(echo $A | perl -pne 's/^[0-9]+\.([0-9]{1,3})[0-9]{1,3}.*/\1/')
+        #     A3=$(echo $A | perl -pne 's/^[0-9]+\.[0-9]{1,3}([0-9]{1,3}).*/\1/')
+        #     zeros=$(echo -n $A | perl -ne 's/^([0-9]+)\.(0*).*/$2/; print length')
+        #     echo "{ $A -> A1:$A1 / A2:$A2 / A3:$A3 / zeros:$zeros}" 1>&2
+        #     Anormalized=$(bc -lq <(echo "scale=6; $A1+($A2/1000)+($A3/1000000); halt"))
+        #     #Anormalized=$(bc -lq <(echo "scale=6; $A1+(($A-$A1)*100/10^$zeros); halt"))
+        #     echo "* tuple: $A -> $Anormalized" 1>&2
+        # else
             Anormalized=$A
-        fi
+        #fi
     fi
     echo $Anormalized
 }
@@ -565,6 +572,18 @@ version_number_ge () {
     A="${1:-0}"
     B="${2:-0}"
     return $(version_number_compare "$A" ">=" "$B")
+}
+
+version_number_lt () {
+    A="${1:-0}"
+    B="${2:-0}"
+    return $(version_number_compare "$A" "<" "$B")
+}
+
+version_number_le () {
+    A="${1:-0}"
+    B="${2:-0}"
+    return $(version_number_compare "$A" "<=" "$B")
 }
 
 has_kernel_release_min () {
