@@ -76,8 +76,11 @@ arm_cpu () {
 # outputs cpu family from /proc/cpuinfo
 # since all testsuites using hex values, return value in hex format
 get_cpu_family () {
-    fam=$(echo $(grep family /proc/cpuinfo |head -1|cut -d: -f2))
-    echo "0x"$(get_hex_from_int $fam)
+    echo $(echo $(grep family /proc/cpuinfo |head -1|cut -d: -f2))
+}
+
+get_cpu_family_hex () {
+    echo "0x"$(get_hex_from_int $(get_cpu_family $fam))
 }
 
 # checks cpu family from /proc/cpuinfo against a minimum family
