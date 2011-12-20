@@ -442,7 +442,7 @@ is_element_in_list () {
 
 # ===== control variables defaults ==================
 
-# by default reuiqre_* functions generate TAP ok lines
+# by default require_* functions generate TAP ok lines
 REQUIRES_GENERATE_TAP=${REQUIRES_GENERATE_TAP:-1}
 
 # ===== kernel details ==================
