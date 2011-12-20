@@ -155,7 +155,8 @@ has_kernel_config () {
     CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
     if echo $CONFIG | grep -q '\.gz' ; then
         echo GZIPPED
-        tempfile=$(tempfile)
+        TEMP=${TEMP:-/tmp}
+        tempfile="$TEMP/$$-tapper-autoreport-tempfile-$$.tmp"
         gunzip < $CONFIG > $tempfile
         CONFIG=$tempfile
     fi
