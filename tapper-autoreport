@@ -418,9 +418,43 @@ append_tapdata () {
 }
 
 append_comment () {
-    tapline="# ${1:-''}"
+    tapline="# ${@:-''}"
     TAP=( "${TAP[@]}" "$tapline" )
     COMMENTCOUNTER=$((COMMENTCOUNTER + 1))
+}
+
+diag () {
+    append_comment "${@}"
+}
+
+is () {
+    A="${1:-}"
+    B="${2:-}"
+    msg="${3:-unknown}"
+
+    if [ "x$A" != "x$B" ] ; then
+        append_tap "not ok - $msg"
+        append_comment "Failed test '$msg'"
+        append_comment "got: '$A'"
+        append_comment "expected: '$B'"
+    else
+        append_tap "ok - $msg"
+    fi
+}
+
+isnt () {
+    A="${1:-}"
+    B="${2:-}"
+    msg="${3:-unknown}"
+
+    if [ "x$A" = "x$B" ] ; then
+        append_tap "not ok - $msg"
+        append_comment "Failed test '$msg'"
+        append_comment "got: '$A'"
+        append_comment "expected: anything else"
+    else
+        append_tap "ok - $msg"
+    fi
 }
 
 ok () {
