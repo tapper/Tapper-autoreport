@@ -186,6 +186,11 @@ you don't specify MAX it defaults to MIN.
 
 Verifies that the string "foo" occurs in `/proc/cpuinfo` flags section.
 
+#### require_kernel_config "CONFIG_FOO"
+
+Verify that regex "^CONFIG_FOO=." occurs in /proc/config.gz or
+/boot/config/$(uname -r).
+
 #### require_program "foo"
 
 Verify that the program "foo" is available.
@@ -239,6 +244,11 @@ Returns 0 (shell TRUE) if L3 cache is available (checked in
 
 Returns 0 (shell TRUE) if string "foo" occurs in `/proc/cpuinfo` flags
 section.
+
+#### has_kernel_config "CONFIG_FOO"
+
+Returns 0 (shell TRUE) if regex "^CONFIG_FOO=." occurs in
+/proc/config.gz or /boot/config/$(uname -r).
 
 #### has_program "foo"
 
@@ -323,6 +333,7 @@ You can
 * `PLANNINGID`            - relevant task planning id (MS Project, TaskJuggler)
 * `NOSEND`                - if "1" no sending to Tapper happens
 * `NOUPLOAD`              - if "1" no uploading of default files happens
+* `REQUIRES_GENERATE_TAP` - if "1" then require_* functions generate additional "ok" line on success
 
 
 ### Command Line Arguments
