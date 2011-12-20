@@ -53,7 +53,6 @@ REPORTGROUP=selftest-$(date +%Y-%m-%d | md5sum | cut -d" " -f1)
 NOSEND=${NOSEND:-1}
 NOUPLOAD=1
 
-
 uname -a | grep -q Linux  # example for ok   exit code
 ok $? "we are on linux"
 

@@ -399,11 +399,6 @@ require_kernel_release_min_3 () {
     fi
 }
 
-# backwards compat form for 2.6.* kernel times
-require_kernel_release_min () {
-    require_kernel_release_min_3 "$release_req"
-}
-
 is_element_in_list () {
     # check if element is in list
     element="${1:-unknown}"
