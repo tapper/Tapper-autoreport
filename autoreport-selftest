@@ -34,7 +34,8 @@ TAPDATA[0]="timecpb: 12"
 TAPDATA[1]="timenocpb: 15"
 TAPDATA[2]="ratio: 0.8"
 TAPDATA[3]="vendor: $(get_vendor)"
-TAPDATA[4]="cpu_family: $(get_cpu_family)"
+TAPDATA[4]="cpu_family_hex: $(get_cpu_family_hex)"
+TAPDATA[5]="cpu_family_dec: $(get_cpu_family)"
 append_tapdata "number_of_tap_reports: $(get_tap_counter)"
 
 main_after_hook ()
@@ -58,7 +59,7 @@ ok $? "we are on linux"
 
 uname -a | grep -q A_very_unknown_system_that_should_never_exist
 result=$?
-ok $result "not on unknown system # TODO"
+ok $result "not on unknown system # TODO this is a TODO test"
 negate_ok $result "still not on unknown system"
 
 # test get_hex_from_int
@@ -76,6 +77,73 @@ ok $result "get_random_number test"
 
 # test kernel release number greater or equal to 2.x (assuming older don't run anywhere anymore)
 require_kernel_release_min_1 2
+
+# kernel version
+kernelversion=$(get_kernel_release)
+result=1 ; echo $kernelversion | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' && result=0
+ok $result "get_kernel_release"
+append_comment $kernelversion
+
+A=2.003
+An=$(normalize_version_number $A)
+is "$An" "2.003" "normalize_version_number one-dot 1"
+is $(normalize_version_number 3.010000) "3.010000" "normalize_version_number one-dot 1"
+#is $(normalize_version_number 3.100000) "3.100000" "normalize_version_number one-dot 1"
+
+A=2.6.38
+An=$(normalize_version_number $A)
+is "$An" "2.006038" "normalize_version_number two-dots 1"
+isnt "$An" "2.6.38" "normalize_version_number two-dots 2"
+diag "affe tiger fink und star" "kram" "zeugs"
+
+# # version arithmetics
+version_number_gt 2.006038 3.001001
+negate_ok $? "version_number_gt false normalized"
+version_number_gt 2.6.38 3.1
+negate_ok $? "version_number_gt false dotted"
+
+version_number_gt 3.001001 2.006038
+ok $? "version_number_gt true normalized"
+version_number_gt 3.1 2.6.38
+ok $? "version_number_gt true dotted"
+version_number_gt 3.1 3.001
+ok $? "version_number_gt true zeros 1"
+version_number_gt 3.100 3.001
+ok $? "version_number_gt true zeros 2"
+version_number_gt 3.100 3.1
+ok $? "version_number_gt true zeros 3 # TODO no correct zeros normalization yet"
+
+version_number_gt 3 2
+ok $? "version_number_gt true single"
+version_number_gt 3.001 2.001
+ok $? "version_number_gt true dotted"
+version_number_gt 3.10.3 3.1.4
+ok $? "version_number_gt true two-dots"
+version_number_gt 3.1.3 3.01.4
+ok $? "version_number_gt true two-dots # TODO no correct zeros normalization yet"
+version_number_ge 3.1 3.1
+ok $? "version_number_ge true"
+
+version_number_lt 2 3
+ok $? "version_number_lt true single"
+version_number_lt 2.001 3.001
+ok $? "version_number_lt true dotted"
+version_number_lt 3.1.4 3.10.3
+ok $? "version_number_lt true two-dots"
+version_number_lt 3.01.4 3.1.3
+ok $? "version_number_lt true two-dots # TODO no correct zeros normalization yet"
+version_number_le 3.1 3.1
+ok $? "version_number_le true"
+
+# test get_cpu_family_hex
+fam=$(get_cpu_family_hex)
+result=1 ; echo $fam | grep -qE '^0x[0-9a-f]+$' && result=0
+ok $result "get_cpu_family_hex"
+
+# test get_cpu_family
+fam=$(get_cpu_family)
+result=1 ; echo $fam | grep -qE '^[0-9]+$' && result=0
+ok $result "get_cpu_family"
 
 # test if 123 is part of "1234 123 12"
 is_element_in_list 123 "1234 123 12"

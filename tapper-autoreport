@@ -551,8 +551,8 @@ version_number_compare () {
     An=$(normalize_version_number $A)
     Bn=$(normalize_version_number $B)
 
-    echo "[$A] -> ($An)" 1>&2
-    echo "[$B] -> ($Bn)" 1>&2
+    # echo "[$A] -> ($An)" 1>&2
+    # echo "[$B] -> ($Bn)" 1>&2
 
     COMPARE_RESULT=$(bc -lq <(echo "$An $COMPARATOR $Bn; halt"))
     if [ "x1" = "x$COMPARE_RESULT" ] ; then
