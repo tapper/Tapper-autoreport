@@ -70,6 +70,19 @@ ok $result "get_hex_from_int test"
 result=1; [ 'xxx' = $(lower_case 'XXX') ] && result=0
 ok $result "lower_case test"
 
+# test random number
+test_max_number=10
+result=1; [ $test_max_number -gt $(get_random_number $test_max_number) ] && result=0
+ok $result "get_random_number test"
+
+# test kernel release number greater or equal to 2.x (assuming older don't run anywhere anymore)
+require_kernel_release_min_1 2
+
+# test if 123 is part of "1234 123 12"
+is_element_in_list 123 "1234 123 12"
+ok $? "123 is in '1234 123 12'"
+is_element_in_list fnord "Written in the OSRC"
+negate_ok $? 'fnord not in "Written in the OSRC"'
 
 . ./tapper-autoreport
 
