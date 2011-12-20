@@ -149,7 +149,7 @@ require_cpufeature () {
     fi
 }
 
-# checks for a config in /proc/config.gz or /boot/config/`uname -r`
+# checks for a config in /proc/config.gz or /boot/config/$(uname -r)
 has_kernel_config () {
     feature="${1:-UNKNOWNFEATURE}"
     CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
@@ -366,15 +366,7 @@ get_kernel_release_3 () {
     echo "$number"
 }
 
-kernel_release_min () {
-    # check if current LK 3rd level release number is greater or equal release_req
-    release_req="${1:-}"
-    [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
-    [ $(get_kernel_release_3) -ge "$release_req" ] && return 0
-    return 1
-}
-
-kernel_release_min_1 () {
+has_kernel_release_min_1 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
     [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
@@ -382,7 +374,7 @@ kernel_release_min_1 () {
     return 1
 }
 
-kernel_release_min_2 () {
+has_kernel_release_min_2 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
     [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
@@ -390,7 +382,7 @@ kernel_release_min_2 () {
     return 1
 }
 
-kernel_release_min_3 () {
+has_kernel_release_min_3 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
     [ "$release_req" -ne $(echo $release_req|sed 's/^\([0-9]\+\).*/\1/') ] && return 1
@@ -402,7 +394,8 @@ require_kernel_release_min_1 () {
     # exit 0 if current LK release is less than required 3rd level version number
     release_req="${1:-}"
     explanation="${2:-Linux Kernel must be newer than ${release_req}.x.x}"
-    if kernel_release_min_1 "$release_req"; then
+    if has_kernel_release_min_1 "$release_req"; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_release_min_1 $release_req" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
@@ -413,7 +406,8 @@ require_kernel_release_min_2 () {
     # exit 0 if current LK release is less than required 2nd level version number
     release_req="${1:-}"
     explanation="${2:-Linux Kernel must be newer than x.${release_req}.x}"
-    if kernel_release_min_2 "$release_req"; then
+    if has_kernel_release_min_2 "$release_req"; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_release_min_2 $release_req" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
@@ -424,7 +418,8 @@ require_kernel_release_min_3 () {
     # exit 0 if current LK release is less than required 3rd level version number
     release_req="${1:-}"
     explanation="${2:-Linux Kernel must be newer than x.x-${release_req}}"
-    if kernel_release_min_3 "$release_req"; then
+    if has_kernel_release_min_3 "$release_req"; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_release_min_3 $release_req" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
