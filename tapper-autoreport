@@ -97,6 +97,7 @@ require_amd_family_range () {
     max="${2:-$min}"
     if vendor_amd && cpu_family_min "$min" && cpu_family_max "$max" ;
     then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_amd_family_range $min $max" ; fi
         return 0
     else
         vendor=$(get_vendor);
@@ -119,6 +120,7 @@ has_l3cache () {
 require_l3cache () {
     explanation="${1:-No L3 cache}"
     if has_l3cache ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_l3cache" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
@@ -140,6 +142,7 @@ require_cpufeature () {
     feature="${1:-UNKNOWNFEATURE}"
     explanation="${2:-Missing cpufeature $feature}"
     if has_cpufeature "$feature" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_cpufeature $feature" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
@@ -167,6 +170,7 @@ require_kernel_config () {
     feature="${1:-UNKNOWNFEATURE}"
     explanation="${2:-Missing kernel config $feature}"
     if has_kernel_config "$feature" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_config $feature" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
@@ -215,6 +219,7 @@ has_cpbdisable () {
 require_cpbdisable () {
     explanation="${1:-No CPB disable}"
     if has_cpbdisable ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_cpbdisable" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
@@ -258,6 +263,7 @@ require_root () {
     explanation="${1:-Need to run as root}"
     ID=$(id|cut -d" " -f1|cut -d= -f2|cut -d\( -f1)
     if [ "x$ID" == "x0" ] ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_root" ; fi
         return 0
     else
         autoreport_skip_all "$explanation"
