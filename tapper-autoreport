@@ -134,6 +134,26 @@ require_l3cache () {
     fi
 }
 
+# check x86_64
+is_x86_64 () {
+    if uname -m | grep -q x86_64 ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# stops testscript if is not x86_64
+require_x86_64 () {
+    explanation="${1:-No x86_64}"
+    if is_x86_64 ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_x86_64" ; fi
+        return 0
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # check if we are in a Xen guest
 # Note:
 #   In Xen the dom0 reports the same 'hypervisor' flag and CPUID entry
