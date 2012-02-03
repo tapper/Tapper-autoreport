@@ -337,6 +337,28 @@ require_cpbdisable () {
     fi
 }
 
+# checks whether the module is ther
+has_module () {
+    module="${1:-UNKNOWNMODULE}"
+    if lsmod | grep -q "^$module\b" ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
+# stops testscript if the cpbdisable file does not exist in sysfs
+require_module () {
+    module="${1:-UNKNOWNMODULE}"
+    explanation="${2:-No module $module disable}"
+    if has_cpbdisable ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_module" ; fi
+        return _$SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # checks whether the program is available
 has_program () {
     program="${1:-UNKNOWNPROGRAM}"
