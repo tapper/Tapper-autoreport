@@ -788,6 +788,7 @@ if [ ! "$reportgroup_testrun" ] ; then
 fi
 
 tapper_suite_meta() {
+    echo "# Tapper-section:                  $suite_name";
     echo "# Tapper-suite-name:               $suite_name";
     echo "# Tapper-suite-version:            $suite_version";
     echo "# Tapper-machine-name:             $hostname";
