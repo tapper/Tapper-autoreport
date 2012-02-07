@@ -779,7 +779,10 @@ moreinfourl=${MOREINFOURL:-""}
 # - uname
 # - cpuinfo
 # - kernel config
-TESTRUN_FROM_CONFIG=$(grep -E '^test_run:' /test.config | cut -d: -f2)
+TESTRUN_FROM_CONFIG=""
+if [ -r /test.config ] ; then
+    TESTRUN_FROM_CONFIG=$(grep -E '^test_run:' /test.config | cut -d: -f2)
+fi
 reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-${TESTRUN_FROM_CONFIG:-}}}
 reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
 
