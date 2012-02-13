@@ -845,78 +845,78 @@ tapper_help () {
 
 prepare_start () {
 
-if [ x"$HARNESS_ACTIVE" == x"1" ] ; then
-    NOSEND=1
-else
-    require_netcat
-fi
-
-EXITCODE=0
-OK=1
-FILECOUNT=0
-
-# do not implicitely upload files like kernel config
-noupload=${NOUPLOAD:-0}
-
-# extend that list with usernames that should magically be recognized
-# as test owner when listing them as argument
-[ -r ./TAPPER_KNOWNUSERS ] && . ./TAPPER_KNOWNUSERS
-KNOWNUSERS=${KNOWNUSERS:-"root tapper"}
-KNOWNUSERS_REGEX=$(for k in $KNOWNUSERS ; do echo $k ; done | sort | paste -sd- | sed -e 's/-/\\|/g')
-
-for i in $(seq 1 $#) ; do
-    a=${!i}
-    # echo "<${a}>"
-    if echo "$a" | grep -Eq '^-?[0-9]+$' ; then
-        if [ "$a" != "0" ] ; then
-            EXITCODE=$a
-        fi
-    elif [ x"$a" == x"nok" ] ; then
-        OK=0
-    elif [ "x$a" == x"--version" ] ; then
-        PRINTVERSION=1
-    elif [ -e "$a" ] ; then
-        FILES[$FILECOUNT]="$a"
-        let FILECOUNT=FILECOUNT+1
-    elif echo "$a" | grep -qi "^\\($KNOWNUSERS_REGEX\\)\$" ; then
-        REPORTERNAME="$a"
+    if [ x"$HARNESS_ACTIVE" == x"1" ] ; then
+        NOSEND=1
+    else
+        require_netcat
     fi
-done
 
-# ===== kernel config files ==================
+    EXITCODE=0
+    OK=1
+    FILECOUNT=0
 
-if [ ! "$NOUPLOAD" ] ; then
+    # do not implicitely upload files like kernel config
+    noupload=${NOUPLOAD:-0}
+
+    # extend that list with usernames that should magically be recognized
+    # as test owner when listing them as argument
+    [ -r ./TAPPER_KNOWNUSERS ] && . ./TAPPER_KNOWNUSERS
+    KNOWNUSERS=${KNOWNUSERS:-"root tapper"}
+    KNOWNUSERS_REGEX=$(for k in $KNOWNUSERS ; do echo $k ; done | sort | paste -sd- | sed -e 's/-/\\|/g')
+
+    for i in $(seq 1 $#) ; do
+        a=${!i}
+        # echo "<${a}>"
+        if echo "$a" | grep -Eq '^-?[0-9]+$' ; then
+            if [ "$a" != "0" ] ; then
+                EXITCODE=$a
+            fi
+        elif [ x"$a" == x"nok" ] ; then
+            OK=0
+        elif [ "x$a" == x"--version" ] ; then
+            PRINTVERSION=1
+        elif [ -e "$a" ] ; then
+            FILES[$FILECOUNT]="$a"
+            let FILECOUNT=FILECOUNT+1
+        elif echo "$a" | grep -qi "^\\($KNOWNUSERS_REGEX\\)\$" ; then
+            REPORTERNAME="$a"
+        fi
+    done
+
+    # ===== kernel config files ==================
+
+    if [ ! "$NOUPLOAD" ] ; then
+        if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
+            if [ -n "$BOOTCONFIG" ] ; then
+                FILES[$FILECOUNT]="$BOOTCONFIG"
+                let FILECOUNT=FILECOUNT+1
+            fi
+            if [ -e "$PROCCONFIG" ] ; then
+                FILES[$FILECOUNT]="$PROCCONFIG"
+                let FILECOUNT=FILECOUNT+1
+            fi
+        fi
+    fi
+
+    # ===== upload ourself ===============
+
     if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
-        if [ -n "$BOOTCONFIG" ] ; then
-            FILES[$FILECOUNT]="$BOOTCONFIG"
-            let FILECOUNT=FILECOUNT+1
-        fi
-        if [ -e "$PROCCONFIG" ] ; then
-            FILES[$FILECOUNT]="$PROCCONFIG"
-            let FILECOUNT=FILECOUNT+1
-        fi
+        FILES[$FILECOUNT]="$0";            let FILECOUNT=FILECOUNT+1
     fi
-fi
 
-# ===== upload ourself ===============
+    # ===== /proc files ==================
 
-if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
-    FILES[$FILECOUNT]="$0";            let FILECOUNT=FILECOUNT+1
-fi
+    if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
+        FILES[$FILECOUNT]="/proc/cpuinfo"; let FILECOUNT=FILECOUNT+1
+        FILES[$FILECOUNT]="/proc/devices"; let FILECOUNT=FILECOUNT+1
+        FILES[$FILECOUNT]="/proc/version"; let FILECOUNT=FILECOUNT+1
+    fi
 
-# ===== /proc files ==================
+    # ===== utility functions ==================
 
-if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
-    FILES[$FILECOUNT]="/proc/cpuinfo"; let FILECOUNT=FILECOUNT+1
-    FILES[$FILECOUNT]="/proc/devices"; let FILECOUNT=FILECOUNT+1
-    FILES[$FILECOUNT]="/proc/version"; let FILECOUNT=FILECOUNT+1
-fi
-
-# ===== utility functions ==================
-
-TAPPER_REPORT_SERVER=${TAPPER_REPORT_SERVER:-${ARTEMIS_REPORT_SERVER:-tapper}}
-TAPPER_REPORT_PORT=${TAPPER_REPORT_PORT:-${ARTEMIS_REPORT_PORT:-7357}}
-TAPPER_API_PORT=${TAPPER_API_PORT:-${ARTEMIS_API_PORT:-7358}}
+    TAPPER_REPORT_SERVER=${TAPPER_REPORT_SERVER:-${ARTEMIS_REPORT_SERVER:-tapper}}
+    TAPPER_REPORT_PORT=${TAPPER_REPORT_PORT:-${ARTEMIS_REPORT_PORT:-7357}}
+    TAPPER_API_PORT=${TAPPER_API_PORT:-${ARTEMIS_API_PORT:-7358}}
 
 } # prepare_start()
 
