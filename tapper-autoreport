@@ -291,7 +291,6 @@ has_kernel_config () {
     feature="${1:-UNKNOWNFEATURE}"
     CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
     if echo $CONFIG | grep -q '\.gz' ; then
-        echo GZIPPED
         TEMP=${TEMP:-/tmp}
         tempfile="$TEMP/$$-tapper-autoreport-tempfile-$$.tmp"
         gunzip < $CONFIG > $tempfile
@@ -1047,7 +1046,7 @@ autoreport_start () {
     fi
 
     if [ ! "x1" = "x$NOSEND" ] ; then
-        NETCAT=$(which netcat || which nc)
+        NETCAT=$(which netcat 2> /dev/null || which nc 2> /dev/null)
         # does it provide -q option
         if $NETCAT -h 2>&1 |grep -q -- '-q.*quit' ; then
             NETCAT="$NETCAT -q7"
