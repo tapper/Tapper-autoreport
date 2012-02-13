@@ -865,8 +865,8 @@ noupload=${NOUPLOAD:-0}
 
 # extend that list with usernames that should magically be recognized
 # as test owner when listing them as argument
-KNOWNUSERS="root tapper"
-
+[ -r ./TAPPER_KNOWNUSERS ] && . ./TAPPER_KNOWNUSERS
+KNOWNUSERS=${KNOWNUSERS:-"root tapper"}
 KNOWNUSERS_REGEX=$(for k in $KNOWNUSERS ; do echo $k ; done | sort | paste -sd- | sed -e 's/-/\\|/g')
 
 for i in $(seq 1 $#) ; do
