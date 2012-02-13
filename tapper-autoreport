@@ -855,6 +855,10 @@ tapper_help () {
     echo ""
 }
 
+tapper_version () {
+	echo "$VERSION"
+}
+
 # ===== param evaluation ==============================
 
 prepare_start () {
@@ -887,8 +891,6 @@ prepare_start () {
             fi
         elif [ x"$a" == x"nok" ] ; then
             OK=0
-        elif [ "x$a" == x"--version" ] ; then
-            PRINTVERSION=1
         elif [ -e "$a" ] ; then
             FILES[$FILECOUNT]="$a"
             let FILECOUNT=FILECOUNT+1
@@ -1053,11 +1055,6 @@ autoreport_start () {
 
     prepare_start
 
-    if [ "$PRINTVERSION" ] ; then
-        echo "$VERSION"
-        exit 0
-    fi
-
     if [ ! "x1" = "x$NOSEND" ] ; then
         NETCAT=$(which netcat 2> /dev/null || which nc 2> /dev/null)
         # does it provide -q option
@@ -1100,6 +1097,7 @@ autoreport_start () {
 
 [ "$1" == "--import-utils" ] && return 0
 [ "$1" == "--help" ] && tapper_help && exit 0
+[ "$1" == "--version" ] && tapper_version && exit 0
 
 # =====================================================
 
