@@ -841,14 +841,9 @@ tapper_help () {
     echo ""
 }
 
-# =====================================================
-
-# up to here functions are sourced by test scripts
-
-[ "$1" == "--import-utils" ] && return 0
-[ "$1" == "--help" ] && tapper_help && exit 0
-
 # ===== param evaluation ==============================
+
+prepare_start () {
 
 if [ x"$HARNESS_ACTIVE" == x"1" ] ; then
     NOSEND=1
@@ -922,6 +917,8 @@ fi
 TAPPER_REPORT_SERVER=${TAPPER_REPORT_SERVER:-${ARTEMIS_REPORT_SERVER:-tapper}}
 TAPPER_REPORT_PORT=${TAPPER_REPORT_PORT:-${ARTEMIS_REPORT_PORT:-7357}}
 TAPPER_API_PORT=${TAPPER_API_PORT:-${ARTEMIS_API_PORT:-7358}}
+
+} # prepare_start()
 
 prepare_plan() {
     # count of our own tests
@@ -1040,6 +1037,8 @@ autoreport_main() {
 
 autoreport_start () {
 
+    prepare_start
+
     if [ "$PRINTVERSION" ] ; then
         echo "$VERSION"
         exit 0
@@ -1080,5 +1079,14 @@ autoreport_start () {
         fi
     fi
 }
+
+# =====================================================
+
+# up to here functions are sourced by test scripts
+
+[ "$1" == "--import-utils" ] && return 0
+[ "$1" == "--help" ] && tapper_help && exit 0
+
+# =====================================================
 
 autoreport_start
