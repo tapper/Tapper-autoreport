@@ -439,6 +439,8 @@ autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
     NOUPLOAD=1
+    autoreport_start
+    exit 0
 }
 
 # ==================== TAP utils ====================
@@ -499,6 +501,18 @@ isnt () {
     else
         append_tap "ok - $msg"
     fi
+}
+
+ok_or_skipall () {
+    success="${1:-0}"
+    msg="${2:-unknown}"
+    if [ "$success" != "0" ] ; then
+        NOT="not "
+    else
+        NOT=""
+    fi
+    append_tap "${NOT}ok - $msg"
+    autoreport_skip_all "Required success for: $msg"
 }
 
 ok () {
