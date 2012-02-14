@@ -154,11 +154,24 @@ require_x86_64 () {
     fi
 }
 
+# check if we are in a Xen host
 is_running_in_xen_dom0 () {
-    echo ""
-    # ls /sys/hypervisor/      # different in Xen versions, pvops, distributions, etc.
-    # /proc/xen
-    # cat /sys/hypervisor/type   --> xen     (pvops feature?)
+    [ -e /sys/hypervisor/type ] || [ -e /proc/xen/capabilities ]
+}
+
+# check if we are in a KVM host
+is_running_in_kvm_host () {
+    [ -e /dev/kvm ]
+}
+
+# check if we have KVM guests running
+has_kvm_guests () {
+    counter=$(lsmod |grep '^kvm_'|awk '{print $3}')
+    if [ $counter -gt 0 ] ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
 }
 
 # check if we are in a Xen guest
@@ -238,11 +251,33 @@ require_running_in_xen_guest () {
     fi
 }
 
+# stops testscript if we aren't a Xen dom0
+require_running_in_xen_dom0 () {
+    explanation="${1:-Needs to run in Xen dom0}"
+    if is_running_in_xen_dom0 ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_xen_dom0" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # stops testscript if we aren't a KVM guest
 require_running_in_kvm_guest () {
     explanation="${1:-Needs to run in KVM guest}"
     if is_running_in_kvm_guest ; then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_kvm_guest" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if we aren't a KVM host
+require_running_in_kvm_host () {
+    explanation="${1:-Needs to run in KVM host}"
+    if is_running_in_kvm_host ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_kvm_host" ; fi
         return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
