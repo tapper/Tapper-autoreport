@@ -392,9 +392,9 @@ has_module () {
 require_module () {
     module="${1:-UNKNOWNMODULE}"
     explanation="${2:-No module $module disable}"
-    if has_cpbdisable ; then
+    if has_module "$module" ; then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_module" ; fi
-        return _$SUCCESS
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
