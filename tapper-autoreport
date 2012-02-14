@@ -49,7 +49,7 @@ require_vendor_intel () {
     if vendor_intel
     then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_vendor_intel" ; fi
-        return 0
+        return $_SUCCESS
     else
         explanation="${1:-vendor does not match Intel}"
         autoreport_skip_all "$explanation"
@@ -61,7 +61,7 @@ require_vendor_amd () {
     if vendor_amd
     then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_vendor_amd" ; fi
-        return 0
+        return $_SUCCESS
     else
         explanation="${1:-vendor does not match AMD}"
         autoreport_skip_all "$explanation"
@@ -105,7 +105,7 @@ require_amd_family_range () {
     if vendor_amd && cpu_family_min "$min" && cpu_family_max "$max" ;
     then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_amd_family_range $min $max" ; fi
-        return 0
+        return $_SUCCESS
     else
         vendor=$(get_vendor);
         fam=$(get_cpu_family);
@@ -117,9 +117,9 @@ require_amd_family_range () {
 # check sysfs whether cpu has L3 cache
 has_l3cache () {
     if [ -d /sys/devices/system/cpu/cpu0/cache/index3 ] ; then
-        return 0
+        return $_SUCCESS
     else
-        return 1
+        return $_FAILURE
     fi
 }
 
@@ -127,8 +127,8 @@ has_l3cache () {
 require_l3cache () {
     explanation="${1:-No L3 cache}"
     if has_l3cache ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_l3cache" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_l3cache" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -137,9 +137,9 @@ require_l3cache () {
 # check x86_64
 is_x86_64 () {
     if uname -m | grep -q x86_64 ; then
-        return 0
+        return $_SUCCESS
     else
-        return 1
+        return $_FAILURE
     fi
 }
 
@@ -147,8 +147,8 @@ is_x86_64 () {
 require_x86_64 () {
     explanation="${1:-No x86_64}"
     if is_x86_64 ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_x86_64" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_x86_64" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -231,8 +231,8 @@ is_running_in_virtualized_guest () {
 require_running_in_xen_guest () {
     explanation="${1:-Needs to run in Xen guest}"
     if is_running_in_xen_guest ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_xen_guest" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_xen_guest" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -242,8 +242,8 @@ require_running_in_xen_guest () {
 require_running_in_kvm_guest () {
     explanation="${1:-Needs to run in KVM guest}"
     if is_running_in_kvm_guest ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_kvm_guest" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_kvm_guest" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -253,8 +253,8 @@ require_running_in_kvm_guest () {
 require_running_in_virtualized_guest () {
     explanation="${1:-Needs to run in virtualized guest}"
     if is_running_in_virtualized_guest ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_virtualized_guest" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_virtualized_guest" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -264,8 +264,8 @@ require_running_in_virtualized_guest () {
 require_running_in_tapper_guest () {
     explanation="${1:-Needs to run in Tapper guest}"
     if is_running_in_tapper_guest ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_running_in_tapper_guest" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_tapper_guest" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -275,9 +275,9 @@ require_running_in_tapper_guest () {
 has_cpufeature () {
     feature="${1:-UNKNOWNFEATURE}"
     if cat /proc/cpuinfo | grep -E '^flags\W*:' | head -1 | grep -q "\<${feature}\>" 2>&1 ; then
-        return 0
+        return $_SUCCESS
     else
-        return 1
+        return $_FAILURE
     fi
 }
 
@@ -286,8 +286,8 @@ require_cpufeature () {
     feature="${1:-UNKNOWNFEATURE}"
     explanation="${2:-Missing cpufeature $feature}"
     if has_cpufeature "$feature" ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_cpufeature $feature" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufeature $feature" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -314,8 +314,8 @@ require_kernel_config () {
     feature="${1:-UNKNOWNFEATURE}"
     explanation="${2:-Missing kernel config $feature}"
     if has_kernel_config "$feature" ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_config $feature" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_config $feature" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -326,9 +326,9 @@ has_cpbdisable () {
     # This file's existence is not the best check.
     # It also exists on non-cpb systems.
     if [ -e /sys/devices/system/cpu/cpu0/cpufreq/cpb ] ; then
-        return 0
+        return $_SUCCESS
     else
-        return 1
+        return $_FAILURE
     fi
 }
 
@@ -336,8 +336,8 @@ has_cpbdisable () {
 require_cpbdisable () {
     explanation="${1:-No CPB disable}"
     if has_cpbdisable ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_cpbdisable" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpbdisable" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -358,7 +358,7 @@ require_module () {
     module="${1:-UNKNOWNMODULE}"
     explanation="${2:-No module $module disable}"
     if has_cpbdisable ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_module" ; fi
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_module" ; fi
         return _$SUCCESS
     else
         autoreport_skip_all "$explanation"
@@ -369,9 +369,9 @@ require_module () {
 has_program () {
     program="${1:-UNKNOWNPROGRAM}"
     if which "$program" > /dev/null 2>&1 ; then
-        return 0
+        return $_SUCCESS
     else
-        return 1
+        return $_FAILURE
     fi
 }
 
@@ -380,7 +380,7 @@ require_program () {
     program="${1:-UNKNOWNPROGRAM}"
     explanation="${2:-Missing program $program}"
     if has_program "$program" ; then
-        return 0
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -391,9 +391,9 @@ has_file () {
     file="${1:-UNKNOWNFILE}"
     explanation="${2:-Missing file $file}"
     if [ -e "$file" ] ; then
-        return 0
+        return $_SUCCESS
     else
-        return 1
+        return $_FAILURE
     fi
 }
 
@@ -402,8 +402,8 @@ require_file () {
     file="${1:-UNKNOWNFILE}"
     explanation="${2:-Missing file $file}"
     if has_file "$file" ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_file $file" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_file $file" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -413,9 +413,9 @@ require_file () {
 require_netcat () {
     explanation="${2:-Missing program netcat}"
     if has_program "netcat" ; then
-        return 0
+        return $_SUCCESS
     elif has_program "nc" ; then
-        return 0
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -425,8 +425,8 @@ require_root () {
     explanation="${1:-Need to run as root}"
     ID=$(id|cut -d" " -f1|cut -d= -f2|cut -d\( -f1)
     if [ "x$ID" == "x0" ] ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_root" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_root" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -659,25 +659,25 @@ has_kernel_release_min () {
 has_kernel_release_min_1 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
-    [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return 1
-    [ $(get_kernel_release_1) -ge "$release_req" ] && return 0
-    return 1
+    [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return $_FAILURE
+    [ $(get_kernel_release_1) -ge "$release_req" ] && return $_SUCCESS
+    return $_FAILURE
 }
 
 has_kernel_release_min_2 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
-    [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return 1
-    [ $(get_kernel_release_2) -ge "$release_req" ] && return 0
-    return 1
+    [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return $_FAILURE
+    [ $(get_kernel_release_2) -ge "$release_req" ] && return $_SUCCESS
+    return $_FAILURE
 }
 
 has_kernel_release_min_3 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
-    [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return 1
-    [ $(get_kernel_release_2) -ge "$release_req" ] && return 0
-    return 1
+    [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return $_FAILURE
+    [ $(get_kernel_release_2) -ge "$release_req" ] && return $_SUCCESS
+    return $_FAILURE
 }
 
 require_kernel_release_min_1 () {
@@ -685,8 +685,8 @@ require_kernel_release_min_1 () {
     release_req="${1:-}"
     explanation="${2:-Linux Kernel must be newer than ${release_req}.x.x}"
     if has_kernel_release_min_1 "$release_req"; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_release_min_1 $release_req" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_release_min_1 $release_req" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -697,8 +697,8 @@ require_kernel_release_min_2 () {
     release_req="${1:-}"
     explanation="${2:-Linux Kernel must be newer than x.${release_req}.x}"
     if has_kernel_release_min_2 "$release_req"; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_release_min_2 $release_req" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_release_min_2 $release_req" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -709,8 +709,8 @@ require_kernel_release_min_3 () {
     release_req="${1:-}"
     explanation="${2:-Linux Kernel must be newer than x.x-${release_req}}"
     if has_kernel_release_min_3 "$release_req"; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_kernel_release_min_3 $release_req" ; fi
-        return 0
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_release_min_3 $release_req" ; fi
+        return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
     fi
@@ -1102,7 +1102,7 @@ autoreport_start () {
 
 # up to here functions are sourced by test scripts
 
-[ "$1" == "--import-utils" ] && return 0
+[ "$1" == "--import-utils" ] && return $_SUCCESS
 [ "$1" == "--help" ] && tapper_help && exit 0
 [ "$1" == "--version" ] && tapper_version && exit 0
 
