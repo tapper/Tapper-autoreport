@@ -872,6 +872,52 @@ tapper_suite_meta() {
     fi
 }
 
+tapper_base_os_description () {
+    if [ -r /etc/lsb-release ] ; then
+        . /etc/lsb-release
+        BASE_OS_DESCRIPTION="$DISTRIB_DESCRIPTION"
+    else
+        RELEASE_FILES="/etc/SuSE-release /etc/issue /etc/issue.net /etc/motd"
+        for i in $RELEASE_FILES ; do if [ -r $i ] ; then RELEASE_FILE=$i ; break ; fi; done
+        BASE_OS_DESCRIPTION=$(cat $RELEASE_FILE | perl -ne 'print if /\w/' | head -1)
+    fi
+    echo $BASE_OS_DESCRIPTION
+}
+
+tapper_xen_dom0_kernel () {
+    echo $(xm info|grep '^release.*:'|cut -d: -f2)
+}
+
+tapper_xen_changeset () {
+    echo $(xm info|grep '^xen_changeset.*:'|sed -e 's/^.* \([^ ]*\)/\1/')
+}
+
+tapper_xen_version () {
+    XEN_VERSION_MAJOR=$(echo $(xm info|grep '^xen_major.*:'|cut -d: -f2))
+    XEN_VERSION_MINOR=$(echo $(xm info|grep '^xen_minor.*:'|cut -d: -f2))
+    XEN_VERSION_EXTRA=$(echo $(xm info|grep '^xen_extra.*:'|cut -d: -f2))
+    XEN_VERSION="$XEN_VERSION_MAJOR.$XEN_VERSION_MINOR$XEN_VERSION_EXTRA"
+    echo $XEN_VERSION
+}
+
+tapper_xen_meta () {
+    if ! has_program "xm" ; then
+        return
+    fi
+
+    echo "# Tapper-xen-dom0-kernel:            $(tapper_xen_dom0_kernel)"
+    echo "# Tapper-xen-version:                $(tapper_xen_version)"
+    echo "# Tapper-xen-changeset:              $(tapper_xen_changeset)"
+    echo "# Tapper-xen-base-os-description:    $(tapper_base_os_description)"
+}
+
+tapper_kvm_meta () {
+    # echo "# Tapper-kvm-module-kernel:     $(uname -r)"
+    # echo "# Tapper-kvm-kernel:            $(uname -r)"
+    echo "# Tapper-kvm-version:           $(uname -r)"
+    echo "# Tapper-kvm-base-os-description:    $(tapper_base_os_description)"
+}
+
 tapper_section_meta() {
     if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
         echo "# Tapper-uname:                    $uname"
@@ -882,6 +928,14 @@ tapper_section_meta() {
         echo "# Tapper-cpuinfo:                  $cpuinfo"
         echo "# Tapper-ram:                      $ram"
         echo "# Tapper-starttime-test-program:   $starttime_test_program"
+    fi
+
+    if is_running_in_xen_dom0 ; then
+        tapper_xen_meta
+    fi
+
+    if is_running_in_kvm_host ; then
+        tapper_kvm_meta
     fi
 
     if [ -n "$SECTION" ] ; then
