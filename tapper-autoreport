@@ -1149,7 +1149,7 @@ autoreport_main() {
 
 autoreport_start () {
 
-    prepare_start
+    prepare_start "${@}"
 
     if [ ! "x1" = "x$NOSEND" ] ; then
         NETCAT=$(which netcat 2> /dev/null || which nc 2> /dev/null)
@@ -1197,4 +1197,4 @@ autoreport_start () {
 
 # =====================================================
 
-autoreport_start
+autoreport_start "${@}"
