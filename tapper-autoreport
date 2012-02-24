@@ -896,7 +896,10 @@ tapper_xen_version () {
     XEN_VERSION_MAJOR=$(echo $(xm info|grep '^xen_major.*:'|cut -d: -f2))
     XEN_VERSION_MINOR=$(echo $(xm info|grep '^xen_minor.*:'|cut -d: -f2))
     XEN_VERSION_EXTRA=$(echo $(xm info|grep '^xen_extra.*:'|cut -d: -f2))
-    XEN_VERSION="$XEN_VERSION_MAJOR.$XEN_VERSION_MINOR$XEN_VERSION_EXTRA"
+    XEN_VERSION=""
+    if [ -n "$XEN_VERSION_MAJOR" ] ; then
+        XEN_VERSION="$XEN_VERSION_MAJOR.$XEN_VERSION_MINOR$XEN_VERSION_EXTRA"
+    fi
     echo $XEN_VERSION
 }
 
