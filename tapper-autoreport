@@ -784,8 +784,11 @@ suite_version=${SUITEVERSION:-$VERSION}
 hostname=${HOSTNAME:-$(hostname)}
 hostname=$(echo $hostname | cut -d. -f1)
 # combined machine name in Tapper automation guest environment
-if is_running_in_tapper_guest ; then
+if is_running_in_virtualized_guest ; then
     if [ "x$TAPPER_HOSTNAME" != "x" ] ; then
+        hostname="${TAPPER_HOSTNAME}:$hostname"
+    elif [ -r /etc/tapper ] ; then
+        TAPPER_HOSTNAME=$(echo $(grep hostname: /etc/tapper | cut -d: -f2))
         hostname="${TAPPER_HOSTNAME}:$hostname"
     fi
 fi
