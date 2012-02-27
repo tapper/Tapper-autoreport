@@ -782,6 +782,7 @@ VERSION=3.002
 suite_name=${SUITENAME:-$(echo $SUITE)}
 suite_version=${SUITEVERSION:-$VERSION}
 hostname=${HOSTNAME:-$(hostname)}
+hostname=$(echo $hostname | cut -d. -f1)
 # combined machine name in Tapper automation guest environment
 if is_running_in_tapper_guest ; then
     if [ "x$TAPPER_HOSTNAME" != "x" ] ; then
