@@ -889,17 +889,20 @@ tapper_base_os_description () {
 }
 
 tapper_xen_dom0_kernel () {
-    echo $(xm info|grep '^release.*:'|cut -d: -f2)
+    XL=$(which xl || which xm)
+    echo $($XL info|grep '^release.*:'|cut -d: -f2)
 }
 
 tapper_xen_changeset () {
-    echo $(xm info|grep '^xen_changeset.*:'|sed -e 's/^.* \([^ ]*\)/\1/')
+    XL=$(which xl || which xm)
+    echo $($XL info|grep '^xen_changeset.*:'|sed -e 's/^.* \([^ ]*\)/\1/')
 }
 
 tapper_xen_version () {
-    XEN_VERSION_MAJOR=$(echo $(xm info|grep '^xen_major.*:'|cut -d: -f2))
-    XEN_VERSION_MINOR=$(echo $(xm info|grep '^xen_minor.*:'|cut -d: -f2))
-    XEN_VERSION_EXTRA=$(echo $(xm info|grep '^xen_extra.*:'|cut -d: -f2))
+    XL=$(which xl || which xm)
+    XEN_VERSION_MAJOR=$(echo $($XL info|grep '^xen_major.*:'|cut -d: -f2))
+    XEN_VERSION_MINOR=$(echo $($XL info|grep '^xen_minor.*:'|cut -d: -f2))
+    XEN_VERSION_EXTRA=$(echo $($XL info|grep '^xen_extra.*:'|cut -d: -f2))
     XEN_VERSION=""
     if [ -n "$XEN_VERSION_MAJOR" ] ; then
         XEN_VERSION="$XEN_VERSION_MAJOR.$XEN_VERSION_MINOR$XEN_VERSION_EXTRA"
@@ -908,7 +911,7 @@ tapper_xen_version () {
 }
 
 tapper_xen_meta () {
-    if ! has_program "xm" ; then
+    if ! has_program "xm" && ! has_program "xl"  ; then
         return
     fi
 
