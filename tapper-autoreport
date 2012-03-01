@@ -203,20 +203,16 @@ is_running_in_xen_guest () {
 #   narrow it against being not a Xen guest. After that the devices
 #   are less significant in KVM so here we then check for the CPUID.
 is_running_in_kvm_guest () {
-    SUCC=1
 
     # try dmidecode
-    if grep -Eqi "^flags.*:.*hypervisor" /proc/cpuinfo ; then
-        if ! is_running_in_xen_guest ; then
-            if modprobe cpuid > /dev/null 2>&1 ; then
-                CPUID=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 status=noxfer 2> /dev/null)
-                if echo $CPUID | grep -q KVM ; then
-                    SUCC=0
-                fi
-            fi
-        fi
+    if ! grep -Eqi "^flags.*:.*hypervisor" /proc/cpuinfo ; then return 1; fi
+    if is_running_in_xen_guest ; then return 1; fi
+    if [ ! -c /dev/cpu/0/cpuid ]; then
+        if ! modprobe cpuid > /dev/null 2>&1 ; then return 1; fi
     fi
-    return $SUCC
+    CPUID=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 status=noxfer 2> /dev/null)
+    if echo $CPUID | grep -q KVM ; then return 0; fi
+    return 1
 }
 
 # check for Tapper automation guest environment
