@@ -73,6 +73,11 @@ arm_cpu () {
     grep -Eqi 'Processor.*:.*ARM' /proc/cpuinfo
 }
 
+# outputs cpu model from /proc/cpuinfo
+get_cpu_model () {
+    echo $(echo $(grep "^model[^ ]" /proc/cpuinfo |head -1|cut -d: -f2))
+}
+
 # outputs cpu family from /proc/cpuinfo
 # since all testsuites using hex values, return value in hex format
 get_cpu_family () {
