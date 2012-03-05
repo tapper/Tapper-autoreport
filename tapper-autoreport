@@ -78,6 +78,25 @@ get_cpu_model () {
     echo $(echo $(grep "^model[^ ]" /proc/cpuinfo |head -1|cut -d: -f2))
 }
 
+# outputs cpu model from /proc/cpuinfo
+get_cpu_model_hex () {
+    echo "0x"$(get_hex_from_int $(get_cpu_model))
+}
+
+# checks cpu model from /proc/cpuinfo against a minimum model
+cpu_model_min () {
+    min=${1:-0}
+    mod=$(get_cpu_model)
+    [ $(($mod)) -ge $(($min)) ]
+}
+
+# checks cpu model from /proc/cpuinfo against a maximum model
+cpu_model_max () {
+    max=${1:-0x999}
+    mod=$(get_cpu_model)
+    [ $(($mod)) -le $(($max)) ]
+}
+
 # outputs cpu family from /proc/cpuinfo
 # since all testsuites using hex values, return value in hex format
 get_cpu_family () {
