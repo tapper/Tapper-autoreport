@@ -104,7 +104,7 @@ get_cpu_family () {
 }
 
 get_cpu_family_hex () {
-    echo "0x"$(get_hex_from_int $(get_cpu_family $fam))
+    echo "0x"$(get_hex_from_int $(get_cpu_family))
 }
 
 # checks cpu family from /proc/cpuinfo against a minimum family
@@ -1222,8 +1222,8 @@ autoreport_start () {
 # up to here functions are sourced by test scripts
 
 [ "$1" == "--import-utils" ] && return $_SUCCESS
-[ "$1" == "--help" ] && tapper_help && exit 0
-[ "$1" == "--version" ] && tapper_version && exit 0
+[ "$1" == "--help" ]         && tapper_help && exit $_SUCCESS
+[ "$1" == "--version" ]      && tapper_version && exit $_SUCCESS
 
 # =====================================================
 
