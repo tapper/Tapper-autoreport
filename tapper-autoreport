@@ -958,14 +958,12 @@ tapper_section_meta() {
         echo "# Tapper-cpuinfo:                  $cpuinfo"
         echo "# Tapper-ram:                      $ram"
         echo "# Tapper-starttime-test-program:   $starttime_test_program"
-    fi
-
-    if is_running_in_xen_dom0 ; then
-        tapper_xen_meta
-    fi
-
-    if is_running_in_kvm_host ; then
-        tapper_kvm_meta
+        if is_running_in_xen_dom0 ; then
+            tapper_xen_meta
+        fi
+        if is_running_in_kvm_host ; then
+            tapper_kvm_meta
+        fi
     fi
 
     if [ -n "$SECTION" ] ; then
