@@ -100,7 +100,7 @@ cpu_model_max () {
 # outputs cpu family from /proc/cpuinfo
 # since all testsuites using hex values, return value in hex format
 get_cpu_family () {
-    echo $(echo $(grep ^family /proc/cpuinfo |head -1|cut -d: -f2))
+    echo $(echo $(grep "^cpu family" /proc/cpuinfo |head -1|cut -d: -f2))
 }
 
 get_cpu_family_hex () {
