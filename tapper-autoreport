@@ -565,7 +565,7 @@ isnt () {
     fi
 }
 
-ok_or_skipall () {
+require_ok () {
     success="${1:-0}"
     msg="${2:-unknown}"
     if [ "$success" != "0" ] ; then
@@ -574,7 +574,10 @@ ok_or_skipall () {
         NOT=""
     fi
     append_tap "${NOT}ok - $msg"
-    autoreport_skip_all "Required success for: $msg"
+
+    # similar to SKIPALL but report what we have so far
+    autoreport_start
+    exit 0
 }
 
 ok () {
