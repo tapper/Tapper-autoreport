@@ -575,6 +575,10 @@ require_ok () {
     fi
     append_tap "${NOT}ok - $msg"
 
+    if [ "$success" = "0" ] ; then
+        return
+    fi
+
     # similar to SKIPALL but report what we have so far
     autoreport_start
     exit 0
