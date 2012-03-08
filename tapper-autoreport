@@ -217,6 +217,18 @@ get_number_xen_guests() {
     fi
 }
 
+get_number_xen_guests() {
+    XL=$(which xl 2> /dev/null || which xm 2> /dev/null)
+    res=$($XL list | wc -l)
+    if [ -n "$res" -a "$res" -ge 2 ] ; then
+    	echo "$((res-2))"
+    	return $_SUCCESS
+    else
+    	echo "0"
+    	return $_FAILURE
+    fi
+}
+
 # check if we are in a Xen guest
 # Note:
 #   In Xen the dom0 reports the same 'hypervisor' flag and CPUID entry
