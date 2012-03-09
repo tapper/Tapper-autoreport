@@ -604,6 +604,7 @@ ok () {
         NOT=""
     fi
     append_tap "${NOT}ok - $msg"
+    return $success
 }
 
 negate_ok () {
@@ -615,6 +616,7 @@ negate_ok () {
         NOT=""
     fi
     append_tap "${NOT}ok - $msg"
+    return $success
 }
 
 get_hex_from_int() { # returns lower case
