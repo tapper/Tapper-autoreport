@@ -365,15 +365,10 @@ has_kernel_config () {
     feature="${1:-UNKNOWNFEATURE}"
     CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
     if echo $CONFIG | grep -q '\.gz' ; then
-        TEMP=${TEMP:-/tmp}
-        tempfile="$TEMP/$$-tapper-autoreport-tempfile-$$.tmp"
-        gunzip < $CONFIG > $tempfile
-        CONFIG=$tempfile
+        gzip -cd "$CONFIG" | grep -q "^${feature}=."
+    else
+        grep -q "^${feature}=." $CONFIG
     fi
-    grep -q "^${feature}=." $CONFIG
-    SUCC=$?
-    if [ -f $tempfile ] ; then rm -f -- "$tempfile" ; fi
-    return $SUCC
 }
 
 # stops testscript if a feature flag is not found in /proc/cpuinfo
