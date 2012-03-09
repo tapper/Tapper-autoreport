@@ -844,7 +844,10 @@ changeset=${CHANGESET:-$(cat /proc/version | head -1)}
 kernelflags=$(cat /proc/cmdline)
 uname=$(uname -a)
 ram=$(free -m | grep -i mem: | awk '{print $2}'MB)
-starttime_test_program=$(date --rfc-2822)
+starttime_test_program=${starttime_test_program:-$(date --rfc-2822)} # first occurrence
+starttime_test_program_epoch=${starttime_test_program_epoch:-$(date +"%s")}
+endtime_test_program=$(date --rfc-2822) # last occurrence
+endtime_test_program_epoch=$(date +"%s")
 bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
 cpuinfo=$(
     if arm_cpu
@@ -977,6 +980,7 @@ tapper_section_meta() {
         echo "# Tapper-cpuinfo:                  $cpuinfo"
         echo "# Tapper-ram:                      $ram"
         echo "# Tapper-starttime-test-program:   $starttime_test_program"
+        echo "# Tapper-endtime-test-program:     $endtime_test_program"
         if is_running_in_xen_dom0 ; then
             tapper_xen_meta
         fi
@@ -1168,6 +1172,12 @@ autoreport_main() {
     echo "ok - tapdata"
     echo "  ---"
     echo "  tapdata: 1"
+    if [ -n "$starttime_test_program_epoch" ] && [ -n "$endtime_test_program_epoch" ] && has_program "bc" ; then
+        _AUTOREPORT_RUNTIME=$(bc -lq <(echo "$endtime_test_program_epoch - $starttime_test_program_epoch; halt"))
+        echo "  starttime: $starttime_test_program_epoch"
+        echo "  endtime: $endtime_test_program_epoch"
+        echo "  runtime: $_AUTOREPORT_RUNTIME"
+    fi
     TAPDATACOUNT=${#TAPDATA[@]}
     if [ "$TAPDATACOUNT" -gt 0 ] ; then
         for l in $(seq 0 $(($TAPDATACOUNT - 1))) ; do
