@@ -138,6 +138,10 @@ require_amd_family_range () {
     fi
 }
 
+get_number_cpus () {
+    grep -c "^bogomips" /proc/cpuinfo
+}
+
 # check sysfs whether cpu has L3 cache
 has_l3cache () {
     if [ -d /sys/devices/system/cpu/cpu0/cache/index3 ] ; then
