@@ -934,26 +934,41 @@ tapper_base_os_description () {
     echo $BASE_OS_DESCRIPTION
 }
 
+# we could as well use uname -r here, but lets explicitly ask Xen
+# first what it thinks the Dom0 kernel version is
 tapper_xen_dom0_kernel () {
-    XL=$(get_xen_tool) || return $_FAILURE
-    echo $($XL info|grep '^release.*:'|cut -d: -f2)
+    XL=$(get_xen_tool)
+    if [ "$?" -eq 0 ] ; then
+        $XL info | grep '^release.*:' | cut -d: -f2
+    else
+        uname -r
+    fi
 }
 
 tapper_xen_changeset () {
-    XL=$(get_xen_tool) || return $_FAILURE
-    echo $($XL info|grep '^xen_changeset.*:'|sed -e 's/^.* \([^ ]*\)/\1/')
+    if [ -r /sys/hypervisor/properties/changeset ] ; then
+        cat /sys/hypervisor/properties/changeset
+    else
+        XL=$(get_xen_tool) || return $_FAILURE
+        echo $($XL info|grep '^xen_changeset.*:'|sed -e 's/^.* \([^ ]*\)/\1/')
+    fi
 }
 
 tapper_xen_version () {
-    XL=$(get_xen_tool) || return $_FAILURE
-    XEN_VERSION_MAJOR=$(echo $($XL info|grep '^xen_major.*:'|cut -d: -f2))
-    XEN_VERSION_MINOR=$(echo $($XL info|grep '^xen_minor.*:'|cut -d: -f2))
-    XEN_VERSION_EXTRA=$(echo $($XL info|grep '^xen_extra.*:'|cut -d: -f2))
-    XEN_VERSION=""
-    if [ -n "$XEN_VERSION_MAJOR" ] ; then
-        XEN_VERSION="$XEN_VERSION_MAJOR.$XEN_VERSION_MINOR$XEN_VERSION_EXTRA"
+    if [ -r /sys/hypervisor/version/major ] ; then
+        _VPATH="/sys/hypervisor/version"
+        echo "$(cat $_VPATH/major).$(cat $_VPATH/minor)$(cat $_VPATH/extra)"
+    else
+        XL=$(get_xen_tool) || return $_FAILURE
+        XEN_VERSION_MAJOR=$(echo $($XL info|grep '^xen_major.*:'|cut -d: -f2))
+        XEN_VERSION_MINOR=$(echo $($XL info|grep '^xen_minor.*:'|cut -d: -f2))
+        XEN_VERSION_EXTRA=$(echo $($XL info|grep '^xen_extra.*:'|cut -d: -f2))
+        XEN_VERSION=""
+        if [ -n "$XEN_VERSION_MAJOR" ] ; then
+            XEN_VERSION="$XEN_VERSION_MAJOR.$XEN_VERSION_MINOR$XEN_VERSION_EXTRA"
+        fi
+        echo $XEN_VERSION
     fi
-    echo $XEN_VERSION
 }
 
 tapper_xen_meta () {
