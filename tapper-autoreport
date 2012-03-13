@@ -623,7 +623,7 @@ negate_ok () {
 }
 
 get_hex_from_int() { # returns lower case
-    echo $(echo "obase=16; $1" | bc| tr '[A-Z]' '[a-z]')
+    printf "%x\n" "$1"
 }
 
 lower_case () {
@@ -660,73 +660,50 @@ get_kernel_release () {
 normalize_version_number () {
     A="${1:-0}"
     # triplets x.y.z are converted to x + y/thousands + z/millions
-    if echo $A | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' ; then
-        A1=$(echo $A | sed -e 's/^\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\1/')
-        A2=$(echo $A | sed -e 's/^\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\2/')
-        A3=$(echo $A | sed -e 's/^\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\3/')
-        Anormalized=$(bc -lq <(echo "scale=6; $A1+($A2/1000)+($A3/1000000); halt"))
+    # easier, but requires awk:
+    # awk -F. '{printf ("%d.%03d%03d\n",$1,$2,$3);}'
+    # we have to do a trick do avoid octal interpretation due to leading
+    # zeros, we use $((10#<number>)), which overrides with a base of 10
+    if echo $A | grep -q '\.' ; then
+        printf "%d.%03d%03d\n" $((10#$(echo "$A" | cut -d. -f1))) $((10#$(echo "$A" | cut -d. -f2))) $((10#$(echo "$A" | cut -d. -f3)))
     else
-        # if echo $A | grep -qE '^[0-9]+\.[0-9]{6}$' ; then
-        #     # On single dots we assume the after-dot part (the 100s)
-        #     # matches the after-first-dot part in 2-dot semantics and
-        #     # we shift that after-dot part left by amount of leading
-        #     # zeros.
-        #     A1=$(echo $A | perl -pne 's/^([0-9]+)\.[0-9]{1,3}[0-9]{1,3}.*/\1/')
-        #     A2=$(echo $A | perl -pne 's/^[0-9]+\.([0-9]{1,3})[0-9]{1,3}.*/\1/')
-        #     A3=$(echo $A | perl -pne 's/^[0-9]+\.[0-9]{1,3}([0-9]{1,3}).*/\1/')
-        #     zeros=$(echo -n $A | perl -ne 's/^([0-9]+)\.(0*).*/$2/; print length')
-        #     echo "{ $A -> A1:$A1 / A2:$A2 / A3:$A3 / zeros:$zeros}" 1>&2
-        #     Anormalized=$(bc -lq <(echo "scale=6; $A1+($A2/1000)+($A3/1000000); halt"))
-        #     #Anormalized=$(bc -lq <(echo "scale=6; $A1+(($A-$A1)*100/10^$zeros); halt"))
-        #     echo "* tuple: $A -> $Anormalized" 1>&2
-        # else
-            Anormalized=$A
-        #fi
+        echo "$A.000000"
     fi
-    echo $Anormalized
 }
 
 version_number_compare () {
     A="${1:-0}"
-    COMPARATOR="${2:-'=='}"
+    COMPARATOR="${2:-'-eq'}"
     B="${3:-0}"
 
-    An=$(normalize_version_number $A)
-    Bn=$(normalize_version_number $B)
+    An=$(normalize_version_number $A | tr -d .)
+    Bn=$(normalize_version_number $B | tr -d .)
 
-    # echo "[$A] -> ($An)" 1>&2
-    # echo "[$B] -> ($Bn)" 1>&2
-
-    COMPARE_RESULT=$(bc -lq <(echo "$An $COMPARATOR $Bn; halt"))
-    if [ "x1" = "x$COMPARE_RESULT" ] ; then
-        echo $_SUCCESS
-    else
-        echo $_FAILURE
-    fi
+	test "$An" $COMPARATOR "$Bn"
 }
 
 version_number_gt () {
     A="${1:-0}"
     B="${2:-0}"
-    return $(version_number_compare "$A" ">" "$B")
+    return $(version_number_compare "$A" -gt "$B")
 }
 
 version_number_ge () {
     A="${1:-0}"
     B="${2:-0}"
-    return $(version_number_compare "$A" ">=" "$B")
+    return $(version_number_compare "$A" -ge "$B")
 }
 
 version_number_lt () {
     A="${1:-0}"
     B="${2:-0}"
-    return $(version_number_compare "$A" "<" "$B")
+    return $(version_number_compare "$A" -lt "$B")
 }
 
 version_number_le () {
     A="${1:-0}"
     B="${2:-0}"
-    return $(version_number_compare "$A" "<=" "$B")
+    return $(version_number_compare "$A" -le "$B")
 }
 
 has_kernel_release_min () {
@@ -1189,11 +1166,10 @@ autoreport_main() {
     echo "ok - tapdata"
     echo "  ---"
     echo "  tapdata: 1"
-    if [ -n "$starttime_test_program_epoch" ] && [ -n "$endtime_test_program_epoch" ] && has_program "bc" ; then
-        _AUTOREPORT_RUNTIME=$(bc -lq <(echo "$endtime_test_program_epoch - $starttime_test_program_epoch; halt"))
+    if [ -n "$starttime_test_program_epoch" ] && [ -n "$endtime_test_program_epoch" ] ; then
         echo "  starttime: $starttime_test_program_epoch"
         echo "  endtime: $endtime_test_program_epoch"
-        echo "  runtime: $_AUTOREPORT_RUNTIME"
+        echo "  runtime: $((endtime_test_program_epoch-starttime_test_program_epoch))"
     fi
     TAPDATACOUNT=${#TAPDATA[@]}
     if [ "$TAPDATACOUNT" -gt 0 ] ; then
