@@ -651,22 +651,19 @@ get_random_number () {
 }
 
 get_kernel_release_1 () {
-    number=$(uname -r | sed -e 's/\([0-9]\)\.[0-9]\+\.[0-9]\+.*/\1/')
-    echo "$number"
+    uname -r | cut -d. -f1
 }
 
 get_kernel_release_2 () {
-    number=$(uname -r | sed -e 's/[0-9]\.\([0-9]\+\)\.[0-9]\+.*/\1/')
-    echo "$number"
+    uname -r | cut -d. -f2
 }
 
 get_kernel_release_3 () {
-    number=$(uname -r | sed -e 's/[0-9]\.[0-9]\+\.\([0-9]\+\).*/\1/')
-    echo "$number"
+    uname -r | cut -d. -f3
 }
 
 get_kernel_release () {
-    echo $(uname -r | sed -e 's/\([0-9]\.[0-9]\+\.[0-9]\+\).*/\1/')
+    uname -r | cut -d. -f1-3
 }
 
 normalize_version_number () {
