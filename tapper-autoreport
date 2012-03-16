@@ -913,7 +913,7 @@ tapper_base_os_description () {
         . /etc/lsb-release
         BASE_OS_DESCRIPTION="$DISTRIB_DESCRIPTION"
     else
-        RELEASE_FILES="/etc/SuSE-release /etc/issue /etc/issue.net /etc/motd"
+        RELEASE_FILES="/etc/slackware-version /etc/gentoo-release /etc/SuSE-release /etc/issue /etc/issue.net /etc/motd"
         for i in $RELEASE_FILES ; do if [ -r $i ] ; then RELEASE_FILE=$i ; break ; fi; done
         BASE_OS_DESCRIPTION=$(cat $RELEASE_FILE | perl -ne 'print if /\w/' | head -1)
     fi
