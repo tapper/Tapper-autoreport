@@ -659,11 +659,11 @@ get_kernel_release_2 () {
 }
 
 get_kernel_release_3 () {
-    uname -r | cut -d. -f3
+    uname -r | cut -d- -f1 | cut -d. -f3
 }
 
 get_kernel_release () {
-    uname -r | cut -d. -f1-3
+    uname -r | cut -d- -f1 | cut -d. -f1-3
 }
 
 normalize_version_number () {
