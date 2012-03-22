@@ -383,10 +383,13 @@ require_cpufeature () {
 has_kernel_config () {
     feature="${1:-UNKNOWNFEATURE}"
     CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
+    if [ -z "$CONFIG" ] ; then
+        return $_FAILURE
+    fi
     if echo $CONFIG | grep -q '\.gz' ; then
         gzip -cd "$CONFIG" | grep -q "^${feature}=."
     else
-        grep -q "^${feature}=." $CONFIG
+        grep -q "^${feature}=." "$CONFIG"
     fi
 }
 
