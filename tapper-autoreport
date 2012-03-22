@@ -792,6 +792,8 @@ is_element_in_list () {
     return $result
 }
 
+prepare_information() {
+
 # ===== control variables defaults ==================
 
 # by default require_* functions generate TAP ok lines
@@ -883,6 +885,7 @@ reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /
 if [ ! "$reportgroup_testrun" ] ; then
     reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
 fi
+} # prepare_information()
 
 tapper_suite_meta() {
     echo "# Tapper-section:                  $suite_name";
@@ -1015,6 +1018,8 @@ tapper_version () {
 # ===== param evaluation ==============================
 
 prepare_start () {
+
+    prepare_information
 
     if [ x"$HARNESS_ACTIVE" == x"1" ] ; then
         NOSEND=1
