@@ -794,97 +794,97 @@ is_element_in_list () {
 
 prepare_information() {
 
-# ===== control variables defaults ==================
+    # ===== control variables defaults ==================
 
-# by default require_* functions generate TAP ok lines
-REQUIRES_GENERATE_TAP=${REQUIRES_GENERATE_TAP:-1}
+    # by default require_* functions generate TAP ok lines
+    REQUIRES_GENERATE_TAP=${REQUIRES_GENERATE_TAP:-1}
 
-# ===== kernel details ==================
+    # ===== kernel details ==================
 
-kernelrelease=$(uname -r)
+    kernelrelease=$(uname -r)
 
-# ===== suite name ==================
+    # ===== suite name ==================
 
-SUITEKEYWORDS=$(for k in $KEYWORDS ; do echo $k ; done | sort | paste -sd-)
-myname=$(echo $(basename -- $0 | sed -e 's/\.\w*$//i')${SUITEKEYWORDS:+-$SUITEKEYWORDS} | sed -e "s/^tapper-//" | sed -e "s/^artemis-//" )
+    SUITEKEYWORDS=$(for k in $KEYWORDS ; do echo $k ; done | sort | paste -sd-)
+    myname=$(echo $(basename -- $0 | sed -e 's/\.\w*$//i')${SUITEKEYWORDS:+-$SUITEKEYWORDS} | sed -e "s/^tapper-//" | sed -e "s/^artemis-//" )
 
-SUITE=${myname:-autoreport}
-VERSION=3.002
+    SUITE=${myname:-autoreport}
+    VERSION=3.002
 
-# ===== other meta info ==================
+    # ===== other meta info ==================
 
-suite_name=${SUITENAME:-$(echo $SUITE)}
-suite_version=${SUITEVERSION:-$VERSION}
-hostname=${HOSTNAME:-$(hostname)}
-hostname=$(echo $hostname | cut -d. -f1)
-# combined machine name in Tapper automation guest environment
-if is_running_in_virtualized_guest ; then
-    if [ "x$TAPPER_HOSTNAME" != "x" ] ; then
-        hostname="${TAPPER_HOSTNAME}:$hostname"
-    elif [ -r /etc/tapper ] ; then
-        TAPPER_HOSTNAME=$(echo $(grep hostname: /etc/tapper | cut -d: -f2))
-        hostname="${TAPPER_HOSTNAME}:$hostname"
+    suite_name=${SUITENAME:-$(echo $SUITE)}
+    suite_version=${SUITEVERSION:-$VERSION}
+    hostname=${HOSTNAME:-$(hostname)}
+    hostname=$(echo $hostname | cut -d. -f1)
+    # combined machine name in Tapper automation guest environment
+    if is_running_in_virtualized_guest ; then
+        if [ "x$TAPPER_HOSTNAME" != "x" ] ; then
+            hostname="${TAPPER_HOSTNAME}:$hostname"
+        elif [ -r /etc/tapper ] ; then
+            TAPPER_HOSTNAME=$(echo $(grep hostname: /etc/tapper | cut -d: -f2))
+            hostname="${TAPPER_HOSTNAME}:$hostname"
+        fi
     fi
-fi
-reportername=${REPORTERNAME:-$USER}
+    reportername=${REPORTERNAME:-$USER}
 
-if [ -e /etc/issue.net ]
-then
-	osname=${OSNAME:-$(cat /etc/issue.net | head -1)}
-else
-	osname=${OSNAME:-$(uname -o)}
-fi
-
-changeset=${CHANGESET:-$(cat /proc/version | head -1)}
-kernelflags=$(cat /proc/cmdline)
-uname=$(uname -a)
-ram=$(free -m | grep -i mem: | awk '{print $2}'MB)
-starttime_test_program=${starttime_test_program:-$(date --rfc-2822)} # first occurrence
-starttime_test_program_epoch=${starttime_test_program_epoch:-$(date +"%s")}
-endtime_test_program=$(date --rfc-2822) # last occurrence
-endtime_test_program_epoch=$(date +"%s")
-bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
-cpuinfo=$(
-    if arm_cpu
+    if [ -e /etc/issue.net ]
     then
-        cpu=$(grep 'Processor' < /proc/cpuinfo | cut -d: -f2- |head -1 | cut -d" " -f2);
+	osname=${OSNAME:-$(cat /etc/issue.net | head -1)}
     else
-        cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
+	osname=${OSNAME:-$(uname -o)}
     fi
-    cpucount=$(grep -i 'bogomips.*:' < /proc/cpuinfo | wc -l);
-    echo "$cpucount cores [$cpu]";
-)
-# TODO: bogomips from /proc/cpuinfo
 
-if [ -e "/boot/config-$kernelrelease" ]
-then
+    changeset=${CHANGESET:-$(cat /proc/version | head -1)}
+    kernelflags=$(cat /proc/cmdline)
+    uname=$(uname -a)
+    ram=$(free -m | grep -i mem: | awk '{print $2}'MB)
+    starttime_test_program=${starttime_test_program:-$(date --rfc-2822)} # first occurrence
+    starttime_test_program_epoch=${starttime_test_program_epoch:-$(date +"%s")}
+    endtime_test_program=$(date --rfc-2822) # last occurrence
+    endtime_test_program_epoch=$(date +"%s")
+    bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
+    cpuinfo=$(
+        if arm_cpu
+        then
+            cpu=$(grep 'Processor' < /proc/cpuinfo | cut -d: -f2- |head -1 | cut -d" " -f2);
+        else
+            cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
+        fi
+        cpucount=$(grep -i 'bogomips.*:' < /proc/cpuinfo | wc -l);
+        echo "$cpucount cores [$cpu]";
+    )
+    # TODO: bogomips from /proc/cpuinfo
+
+    if [ -e "/boot/config-$kernelrelease" ]
+    then
 	BOOTCONFIG="/boot/config-$kernelrelease"
-else
+    else
 	BOOTCONFIG=
-fi
-PROCCONFIG="/proc/config.gz"
+    fi
+    PROCCONFIG="/proc/config.gz"
 
-ticketurl=${TICKETURL:-""}
-wikiurl=${WIKIURL:-""}
-planningid=${PLANNINGID:-""}
-moreinfourl=${MOREINFOURL:-""}
+    ticketurl=${TICKETURL:-""}
+    wikiurl=${WIKIURL:-""}
+    planningid=${PLANNINGID:-""}
+    moreinfourl=${MOREINFOURL:-""}
 
-# group reports with similar environment:
-# - hostname
-# - date
-# - uname
-# - cpuinfo
-# - kernel config
-TESTRUN_FROM_CONFIG=""
-if [ -r /test.config ] ; then
-    TESTRUN_FROM_CONFIG=$(grep -E '^test_run:' /test.config | cut -d: -f2)
-fi
-reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-${TESTRUN_FROM_CONFIG:-}}}
-reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+    # group reports with similar environment:
+    # - hostname
+    # - date
+    # - uname
+    # - cpuinfo
+    # - kernel config
+    TESTRUN_FROM_CONFIG=""
+    if [ -r /test.config ] ; then
+        TESTRUN_FROM_CONFIG=$(grep -E '^test_run:' /test.config | cut -d: -f2)
+    fi
+    reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-${TESTRUN_FROM_CONFIG:-}}}
+    reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
 
-if [ ! "$reportgroup_testrun" ] ; then
-    reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
-fi
+    if [ ! "$reportgroup_testrun" ] ; then
+        reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
+    fi
 } # prepare_information()
 
 tapper_suite_meta() {
