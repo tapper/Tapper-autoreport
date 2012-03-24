@@ -405,6 +405,81 @@ require_kernel_config () {
     fi
 }
 
+# disables core performance boosting for reproducable and well scaling
+# benchmarks. Tries hard to learn the actual state and to really disable
+# it. Diagnostic messages will be print to stdout, the return value
+# describes the success: 0=CPB is disabled, 1=CPB is (probably) still enabled.
+# possible usage (failed disabling is non-fatal, but report it):
+#   todostem="# TODO "
+#   expl=$(disable_cpb) && todostem=""
+#   ok $? "disable CPB $todostem$expl"
+# or a fatal version ending the script:
+#   expl=$(disable_cpb)
+#   require_ok "disable CPB"
+# or: just try to disable it, but don't care if we fail
+#   disable_cpb > /dev/null
+disable_cpb() {
+    # check whether the CPB sysfs knob is there
+    if [ ! -r /sys/devices/system/cpu/cpu0/cpufreq/cpb ] ; then
+        is_running_in_virtualized_guest && _cpbhint=" (running virtualized)"
+        # if the CPU does not support boosting, we dont care
+        if ! has_cpufeature cpb ; then
+            echo "# CPU has no CPB support$_cpbhint"
+            return 0
+        fi
+        # is the powernow_k8 driver loaded?
+        if ! grep -q " powernowk8_init" /proc/kallsyms; then
+            # if not, try to load it
+            if ! _modprobe_res=$(modprobe powernow_k8 2>&1) ; then
+                echo "# modprobe powernow_k8: $_modprobe_res"
+                return 1
+            fi
+        fi
+        # does this version of powernow_k8 support CPB?
+        if ! grep -q " show_cpb" /proc/kallsyms ; then
+            echo "# powernow_k8 loaded, but no CPB support"
+            return 1
+        fi
+    fi
+    # now check for the sysfs knob again (we may have loaded the driver)
+    if [ ! -r /sys/devices/system/cpu/cpu0/cpufreq/cpb ] ; then
+        echo "# no sysfs knob for disabling CPB, probably still active"
+        return 1
+    fi
+
+    # if the knob is there and it reads 0, everything is fine
+    if [ $(cat /sys/devices/system/cpu/cpu0/cpufreq/cpb) = "0" ] ; then
+        echo "# CPB already disabled"
+        return 0
+    fi
+    # try to disable CPB on all cores and count the number of failures
+    failures=0
+    for cpb in /sys/devices/system/cpu/cpu*/cpufreq/cpb; do
+        echo 0 2> /dev/null > $cpb || let failures++
+    done
+    # no failures means everything is fine
+    if [ "$failures" = 0 ] ; then
+        echo "# CPB successfully disabled"
+        return 0
+    fi
+    # don't give up so quickly, try to explore dmesg for the right message
+    if $(dmesg | grep -q "Core Boosting .*abled") ; then
+        # there was at least one messages, check the last one
+        if dmesg | grep -q "Core Boosting .*abled" | tail -1 | grep -q "Core Boosting disabled" ; then
+            # the last message says its disabled, believe this
+            echo "# CPB disabling failed, but probably disabled before"
+            return 0
+        else
+            # the last message says its enabled, we failed eventually
+            echo "# CPB disabling failed (no permissions), CPB active"
+            return 1
+        fi
+    fi
+    # we have no real clue at this point, but assume the worst
+    echo "# CPB disabling failed, probably still active"
+    return 1
+}
+
 # checks whether the cpbdisable file exists in sysfs
 has_cpbdisable () {
     # This file's existence is not the best check.
