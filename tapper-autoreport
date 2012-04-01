@@ -184,7 +184,21 @@ require_x86_64 () {
 
 # check if we are in a Xen host
 is_running_in_xen_dom0 () {
-    [ -e /sys/hypervisor/type ] || [ -e /proc/xen/capabilities ]
+
+    # this is a definite way to check for Dom0, but not always available
+    if [ -r /proc/xen/capabilities ] ; then
+        [ grep -q control_d /proc/xen/capabilites ] && return 0
+        return 1
+    fi
+
+    # another safe way is the existence of the hypervisor interface device
+    [ -r /proc/xen/privcmd ] && return 0
+
+    # if the system knows its running virtualized, but not under Xen, we
+    # are at least sure that this can _not_ be a Dom0
+    if [ -r /sys/hypervisor/type ] ; then
+        [ $(cat /sys/hypervisor/type) != "xen" ] && return 1
+    fi
 }
 
 # check if we are in a KVM host
@@ -236,6 +250,20 @@ get_number_xen_guests() {
 #   and lspci show different devices inside a domU.
 is_running_in_xen_guest () {
     SUCC=1
+
+    # if /proc/xen has files and we are not Dom0, then we are a DomU
+    if [ -r /proc/xen/capabilities ] ; then
+        [ grep -q control_d /proc/xen/capabilites ] && return 1
+        return 0
+    fi
+
+    # privcmd exists for Dom0 only, so not a DomU
+    [ -r /proc/xen/privcmd ] && return 1
+
+    # if the kernel detected virtualization, but not Xen, return false
+    if [ -r /sys/hypervisor/type ] ; then
+        [ $(cat /sys/hypervisor/type) != "xen" ] && return 1
+    fi
 
     # try dmidecode
     if dmidecode > /dev/null 2>&1 ; then
