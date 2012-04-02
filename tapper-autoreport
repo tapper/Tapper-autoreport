@@ -652,6 +652,18 @@ read_msr() (
     perl -e 'my $msr;sysseek(STDIN,hex($ARGV[0]),0);sysread(STDIN,$msr,8) or exit(1);printf("%016x\n",unpack("Q*",$msr));' $1 < /dev/cpu/$cpu/msr
 )
 
+# reads CPUID and filters for a certain bit
+# usage: get_cpuid_bit <leafnr_in_hex> e[abcd]x <bitnr>
+# example: get_cpuid_bit 0x80000001 ecx 2
+# outputs either 0 or 1 to stdout
+# return value is 0 for success, 1 for invalid CPUID leaf, 2 for permission
+get_cpuid_bit() (
+	[ $# -lt 3 ] && return 3
+	cpu=${4:-0}
+	[ -r /dev/cpu/$cpu/cpuid ] || return 2
+	perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%d\n",($regs[ord(substr($ARGV[1],1,1))-ord("a")] >> $ARGV[2]) & 1);' $1 $2 $3 < /dev/cpu/$cpu/cpuid
+)
+
 autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
