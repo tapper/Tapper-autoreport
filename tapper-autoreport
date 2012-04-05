@@ -285,16 +285,21 @@ is_running_in_xen_guest () {
     if dmidecode > /dev/null 2>&1 ; then
         dmidecode -s chassis-manufacturer | grep -q Xen
         SUCC=$?
-    else
-        # try lspci
-        if lspci > /dev/null 2>&1 ; then
-            lspci | grep -q Xen
-            SUCC=$?
-        fi
+    # try lspci (not in PATH if not root)
+    elif lspci > /dev/null 2>&1 ; then
+        lspci | grep -q Xen
+        SUCC=$?
+    # try /sbin/lspci, listing works even as a user
+    elif /sbin/lspci > /dev/null 2>&1 ; then
+        /sbin/lspci | grep -q Xen
+        SUCC=$?
+    # directly query sysfs and check for XenSource's PCI-ID
+    elif [ -r /sys/bus/pci/devices/0000:00:00.0/vendor ] ; then
+        cat /sys/bus/pci/devices/*/vendor | grep -q 0x5853
+        SUCC=$?
     fi
     return $SUCC
 }
-
 
 # check if we are in a KVM guest
 # Note:
