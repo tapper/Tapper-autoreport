@@ -655,7 +655,7 @@ get_first_file () {
 # will return an error if the file is not readable (not root)
 has_msr_access() (
     cpu=${1:-0}
-    if [ ! -f /dev/cpu/$cpu/msr ] ; then
+    if [ ! -e /dev/cpu/$cpu/msr ] ; then
         has_program modprobe || return 1
         modprobe msr || return 1
     fi
