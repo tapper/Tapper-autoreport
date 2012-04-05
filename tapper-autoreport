@@ -673,6 +673,18 @@ read_msr() (
     perl -e 'my $msr;sysseek(STDIN,hex($ARGV[0]),0);sysread(STDIN,$msr,8) or exit(1);printf("%016x\n",unpack("Q*",$msr));' $1 < /dev/cpu/$cpu/msr
 )
 
+# writes a MSR via the /dev/cpu/<n>/msr device
+# expects the MSR number (in hex) as the first parameter, the value (in hex)
+# is the second one. Optionally the CPU number to use for the write can be
+# given as the third argument (defaults to 0)
+# returns 0 on success, 1 for an invalid MSR and 2 for permission issues
+write_msr() (
+    [ $# -lt 2 ] && return 3
+    cpu=${3:-0}
+    [ -w /dev/cpu/$cpu/msr ] || return 2
+    perl -e 'my $value=pack("Q",hex($ARGV[1]));sysseek(STDOUT,hex($ARGV[0]),0);syswrite(STDOUT,$value,8) or exit(1);' $1 $2 > /dev/cpu/$cpu/msr
+)
+
 # reads CPUID and filters for a certain bit
 # usage: get_cpuid_bit <leafnr_in_hex> e[abcd]x <bitnr>
 # example: get_cpuid_bit 0x80000001 ecx 2
