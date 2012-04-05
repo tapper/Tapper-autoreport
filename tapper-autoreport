@@ -1090,7 +1090,7 @@ tapper_base_os_description () {
 tapper_xen_dom0_kernel () {
     XL=$(get_xen_tool)
     if [ "$?" -eq 0 ] ; then
-        $XL info | grep '^release.*:' | cut -d: -f2
+        $XL info 2> /dev/null | grep '^release.*:' | cut -d: -f2 || uname -r
     else
         uname -r
     fi
@@ -1123,8 +1123,6 @@ tapper_xen_version () {
 }
 
 tapper_xen_meta () {
-    get_xen_tool > /dev/null || return
-
     echo "# Tapper-xen-dom0-kernel:            $(tapper_xen_dom0_kernel)"
     echo "# Tapper-xen-version:                $(tapper_xen_version)"
     echo "# Tapper-xen-changeset:              $(tapper_xen_changeset)"
