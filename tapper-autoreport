@@ -183,16 +183,16 @@ require_x86_64 () {
 }
 
 # check if we are in a Xen host
+# it is a bit tricky to differentiate Dom0 and (PV-)DomU
 is_running_in_xen_dom0 () {
 
     # this is a definite way to check for Dom0, but not always available
+    # XENFS could not be mounted
     if [ -r /proc/xen/capabilities ] ; then
-        grep -q control_d /proc/xen/capabilities && return 0
-        return 1
+        grep -q control_d /proc/xen/capabilities
+        return $?
     fi
 
-    # another safe way is the existence of the hypervisor interface device
-    [ -r /proc/xen/privcmd ] && return 0
 
     # if the system knows its running virtualized, but not under Xen, we
     # are at least sure that this can _not_ be a Dom0
@@ -256,9 +256,6 @@ is_running_in_xen_guest () {
         grep -q control_d /proc/xen/capabilities && return 1
         return 0
     fi
-
-    # privcmd exists for Dom0 only, so not a DomU
-    [ -r /proc/xen/privcmd ] && return 1
 
     # if the kernel detected virtualization, but not Xen, return false
     if [ -r /sys/hypervisor/type ] ; then
