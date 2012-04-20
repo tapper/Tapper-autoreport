@@ -408,8 +408,8 @@ require_running_in_tapper_guest () {
 
 # checks for a feature flag in /proc/cpuinfo
 has_cpufeature () {
-    feature="${1:-UNKNOWNFEATURE}"
-    if cat /proc/cpuinfo | grep -E '^flags\W*:' | head -1 | grep -q "\<${feature}\>" 2>&1 ; then
+    _ta_feature="${1:-UNKNOWNFEATURE}"
+    if cat /proc/cpuinfo | grep -E '^flags\W*:' | head -1 | grep -q "\<${_ta_feature}\>" 2>&1 ; then
         return $_SUCCESS
     else
         return $_FAILURE
@@ -418,10 +418,10 @@ has_cpufeature () {
 
 # stops testscript if a feature flag is not found in /proc/cpuinfo
 require_cpufeature () {
-    feature="${1:-UNKNOWNFEATURE}"
-    explanation="${2:-Missing cpufeature $feature}"
-    if has_cpufeature "$feature" ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufeature $feature" ; fi
+    _ta2_feature="${1:-UNKNOWNFEATURE}"
+    explanation="${2:-Missing cpufeature $_ta2_feature}"
+    if has_cpufeature "$_ta2_feature" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufeature $_ta2_feature" ; fi
         return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
@@ -430,24 +430,24 @@ require_cpufeature () {
 
 # checks for a config in /proc/config.gz or /boot/config/$(uname -r)
 has_kernel_config () {
-    feature="${1:-UNKNOWNFEATURE}"
+    _ta3_feature="${1:-UNKNOWNFEATURE}"
     CONFIG=$(get_first_file "/proc/config.gz" "/boot/config-$(uname -r)")
     if [ -z "$CONFIG" ] ; then
         return $_FAILURE
     fi
     if echo $CONFIG | grep -q '\.gz' ; then
-        gzip -cd "$CONFIG" | grep -q "^${feature}=."
+        gzip -cd "$CONFIG" | grep -q "^${_ta3_feature}=."
     else
-        grep -q "^${feature}=." "$CONFIG"
+        grep -q "^${_ta3_feature}=." "$CONFIG"
     fi
 }
 
 # stops testscript if a feature flag is not found in /proc/cpuinfo
 require_kernel_config () {
-    feature="${1:-UNKNOWNFEATURE}"
-    explanation="${2:-Missing kernel config $feature}"
-    if has_kernel_config "$feature" ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_config $feature" ; fi
+    _ta4_feature="${1:-UNKNOWNFEATURE}"
+    explanation="${2:-Missing kernel config $_ta4_feature}"
+    if has_kernel_config "$_ta4_feature" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_config $_ta4_feature" ; fi
         return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
