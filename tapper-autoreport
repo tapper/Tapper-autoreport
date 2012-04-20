@@ -362,11 +362,14 @@ is_running_in_kvm_guest () {
     is_running_in_xen_guest && return $_FAILURE
     has_cpufeature hypervisor || return $_FAILURE
 
-    if [ ! -c /dev/cpu/0/cpuid ]; then
-        if ! modprobe cpuid > /dev/null 2>&1 ; then return 1; fi
+    # try to load the cpuid module if not already done
+    [ -c /dev/cpu/0/cpuid ] || modprobe cpuid > /dev/null 2>&1
+
+    if [ -c /dev/cpu/0/cpuid ] ; then
+        virtvendor=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 2> /dev/null)
+        [ "$virtvendor" = "KVMKVMVKM" ]
+        return $?
     fi
-    CPUID=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 status=noxfer 2> /dev/null)
-    if echo $CPUID | grep -q KVM ; then return 0; fi
     return 1
 }
 
