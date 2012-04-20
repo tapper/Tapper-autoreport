@@ -264,13 +264,16 @@ is_running_in_xen_dom0 () {
 
     # we need to sort out only Dom0 vs. DomU from now on
 
+    # an ATI or AMD northbridge means Dom0
+    if check_hostbridge 0x1002 || check_hostbridge 0x1022 ; then
+        return $_SUCCESS
     fi
 
-    # out of clues so far, we assume bare metal at this point
-    # but there should be more positive checks for Dom0
-    # maybe we can rule out a DomU at some point, since we have
-    # enough hints for running under Xen
-    return 1
+    # a QEMU northbridge cannot be Dom0
+    check_hostbridge 0x8086 0x1237 && return $_FAILURE
+
+    # out of clues, but we are probably not Dom0 at this point anymore
+    return $_FAILURE
 }
 
 # check if we are in a KVM host
@@ -326,11 +329,22 @@ is_running_in_xen_guest () {
 
     has_xen_pci_device && return $_SUCCESS
 
+    check_hostbridge 0x8086 0x1237 && return $_SUCCESS
+
     # try dmidecode
     if dmidecode > /dev/null 2>&1 ; then
         dmidecode -s chassis-manufacturer | grep -q Xen
         return $?
     fi
+
+    # last resort: check for Xen Dom0
+    is_running_in_xen_dom0 && return $_FAILURE
+
+    # there are no PCI device by default in PV guests
+    _nr_pci_devices=$(ls /sys/bus/pci/devices | wc -l)
+    [ "$_nr_pci_devices" -eq 0 ] && return $_SUCCESS
+
+    # no more clues at this point, assume we are some kind of DomU
     return $_SUCCESS
 }
 
