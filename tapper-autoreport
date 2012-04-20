@@ -182,6 +182,45 @@ require_x86_64 () {
     fi
 }
 
+# scan all PCI devices for one with XenSource's PCI-ID
+has_xen_pci_device() {
+    # try lspci (not in PATH if not root)
+    _ta_xen_LSPCI=$(which lspci 2> /dev/null) || _ta_xen_LSPCI=/sbin/lspci
+    if [ -x "$_ta_xen_LSPCI" ]
+    then
+        $_ta_xen_LSPCI -n | grep -q " 5853:"
+        return $?
+    else
+        # directly query sysfs and check for XenSource's PCI-ID
+        if [ -r /sys/bus/pci/devices/0000:00:00.0/vendor ] ; then
+            cat /sys/bus/pci/devices/*/vendor | grep -q 0x5853
+            return $?
+        else
+            return $_FAILURE
+        fi
+    fi
+}
+
+# checks the PCI hostbridge's vendor and optionally device ID
+# usage: check_hostbridge 0x1022 (for checking for AMD northbridge)
+#        check_hostbridge 0x8086 0x1237 (for QEMU host bridge)
+check_hostbridge() (
+    LSPCI=$(which lspci 2> /dev/null) || LSPCI=/sbin/lspci
+    if [ -x "$LSPCI" ]
+    then
+        lspciout=$($LSPCI -s 0:0.0 -n | cut -d: -f3- | tr -d \ )
+        vendor="0x$(echo $lspciout | cut -d: -f1)"
+        device="0x$(echo $lspciout | cut -d: -f2)"
+    else
+        vendor=$(cat /sys/bus/pci/devices/0000:00:00.0/vendor)
+        device=$(cat /sys/bus/pci/devices/0000:00:00.0/device)
+    fi
+    [ "$vendor" = "$1" ] || return $_FAILURE
+    [ -z "$2" ] && return $_SUCCESS
+    [ "$device" = "$2" ]
+    return $?
+)
+
 # check if we are in a Xen host
 # it is a bit tricky to differentiate Dom0 and (PV-)DomU
 is_running_in_xen_dom0 () {
