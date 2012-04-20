@@ -221,35 +221,49 @@ check_hostbridge() (
     return $?
 )
 
+# checks whether the Xen hypervisor is running
+# this returns 0 if we are a Dom0 or PV DomU or HVM DomU
+is_running_under_xen_hv () {
+    if [ -r /sys/hypervisor/type ] ; then
+        [ $(cat /sys/hypervisor/type) = "xen" ]
+        return $?
+    fi
+
+    [ -r /proc/xen/capabilities ] && return $_SUCCESS
+
+    # Linux denies registering XenFS if not running under Xen
+    if has_kernel_config CONFIG_XENFS ; then
+        grep -q xenfs /proc/filesystems
+        return $?
+    fi
+
+    # TODO: do older kernels support this? At least RHEL5 does
+    has_cpufeature hypervisor || return $_FAILURE
+
+    _ta_e820prov=$(dmesg | sed -e 's/^\[.*\] *//' | grep -A1 "^BIOS-provided physical RAM map:" | tail -1 | cut -d: -f1)
+    [ -n "$_ta_820prov" ] && [ "$_ta_e820prov" = "Xen" ] && return $_SUCCESS
+
+    dmesg | grep -q "Booting paravirtualized kernel on Xen" && return $_SUCCESS
+
+    return $_FAILURE
+}
+
 # check if we are in a Xen host
 # it is a bit tricky to differentiate Dom0 and (PV-)DomU
 is_running_in_xen_dom0 () {
 
-    # this is a definite way to check for Dom0, but not always available
+    # this is a definite way to check for Dom0, but not always available, since
     # XENFS could not be mounted
     if [ -r /proc/xen/capabilities ] ; then
         grep -q control_d /proc/xen/capabilities
         return $?
     fi
 
-    # PVOPS kernels output a message in dmesg
-    # seems like it does not differentiate between PV DomU and Dom0, though
-    # sed -e 's///t e;d;:e;q' is even nicer. but probably overoptimization
-    pvops=$(dmesg | sed -e 's/^.*Booting paravirtualized kernel on //;t;d')
-    [ -n "$pvops" ] && [ "$pvops" != "Xen" ] && return 1
+    # this should sort out most of the other possibilities
+    is_running_under_xen_hv || return $_FAILURE
 
-    # newer kernels set HYPERVISOR capability bit in /proc/cpuinfo
-    # need to investigate how older Xen Dom0 kernels behave
-    #has_cpufeature hypervisor && return 1
+    # we need to sort out only Dom0 vs. DomU from now on
 
-    # the Xen filesystem is not registered if not on Xen
-    # but xenfs works also in DomU, so no positive result here
-    has_kernel_config CONFIG_XENFS && ! grep -q xenfs /proc/filesystems && return 1
-
-    # if the system knows its running virtualized, but not under Xen, we
-    # are at least sure that this can _not_ be a Dom0
-    if [ -r /sys/hypervisor/type ] ; then
-        [ $(cat /sys/hypervisor/type) != "xen" ] && return 1
     fi
 
     # out of clues so far, we assume bare metal at this point
@@ -307,37 +321,17 @@ get_number_xen_guests() {
 #   as in domU therefore the CPUID check is not enough, but dmidecode
 #   and lspci show different devices inside a domU.
 is_running_in_xen_guest () {
-    SUCC=1
 
-    # if /proc/xen has files and we are not Dom0, then we are a DomU
-    if [ -r /proc/xen/capabilities ] ; then
-        grep -q control_d /proc/xen/capabilities && return 1
-        return 0
-    fi
+    is_running_under_xen_hv || return $_FAILURE
 
-    # if the kernel detected virtualization, but not Xen, return false
-    if [ -r /sys/hypervisor/type ] ; then
-        [ $(cat /sys/hypervisor/type) != "xen" ] && return 1
-    fi
+    has_xen_pci_device && return $_SUCCESS
 
     # try dmidecode
     if dmidecode > /dev/null 2>&1 ; then
         dmidecode -s chassis-manufacturer | grep -q Xen
-        SUCC=$?
-    # try lspci (not in PATH if not root)
-    elif lspci > /dev/null 2>&1 ; then
-        lspci | grep -q Xen
-        SUCC=$?
-    # try /sbin/lspci, listing works even as a user
-    elif /sbin/lspci > /dev/null 2>&1 ; then
-        /sbin/lspci | grep -q Xen
-        SUCC=$?
-    # directly query sysfs and check for XenSource's PCI-ID
-    elif [ -r /sys/bus/pci/devices/0000:00:00.0/vendor ] ; then
-        cat /sys/bus/pci/devices/*/vendor | grep -q 0x5853
-        SUCC=$?
+        return $?
     fi
-    return $SUCC
+    return $_SUCCESS
 }
 
 # check if we are in a KVM guest
