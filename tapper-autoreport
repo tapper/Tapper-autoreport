@@ -359,9 +359,9 @@ is_running_in_xen_guest () {
 #   are less significant in KVM so here we then check for the CPUID.
 is_running_in_kvm_guest () {
 
-    # try dmidecode
-    if ! grep -Eqi "^flags.*:.*hypervisor" /proc/cpuinfo ; then return 1; fi
-    if is_running_in_xen_guest ; then return 1; fi
+    is_running_in_xen_guest && return $_FAILURE
+    has_cpufeature hypervisor || return $_FAILURE
+
     if [ ! -c /dev/cpu/0/cpuid ]; then
         if ! modprobe cpuid > /dev/null 2>&1 ; then return 1; fi
     fi
