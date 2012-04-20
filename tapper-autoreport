@@ -333,8 +333,12 @@ is_running_in_xen_guest () {
 
     # try dmidecode
     if dmidecode > /dev/null 2>&1 ; then
-        dmidecode -s chassis-manufacturer | grep -q Xen
-        return $?
+        _dmi_chassis=$(dmidecode -s chassis-manufacturer)
+        # dmidecode does not output anything in PV Xen
+        if [ -n "$_dmi_chassis" ] ; then
+            echo "$_dmi_chassis" | grep -q Xen
+            return $?
+        fi
     fi
 
     # last resort: check for Xen Dom0
