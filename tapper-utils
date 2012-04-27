@@ -1,0 +1,8 @@
+#! /bin/bash
+
+NOSEND=1
+NOUPLOAD=1
+
+. ./tapper-autoreport --import-utils
+
+"${@}"
