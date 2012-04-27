@@ -1535,6 +1535,10 @@ autoreport_start () {
     fi
 }
 
+done_testing () {
+    autoreport_start "${@}"
+}
+
 # =====================================================
 
 # up to here functions are sourced by test scripts
