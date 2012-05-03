@@ -3,6 +3,14 @@
 NOSEND=1
 NOUPLOAD=1
 
-. ./tapper-autoreport --import-utils
+FILES="
+ ./tapper-autoreport
+ /data/tapper/autoreport/tapper-autoreport
+ /opt/tapper/bin/tapper-autoreport
+ /public/bin/tapper-autoreport
+"
+for file in $FILES ; do if [ -r "$file" ] ; then AUTOREPORT="$file" ; break ; fi ; done
+
+. $AUTOREPORT --import-utils
 
 "${@}"
