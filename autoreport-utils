@@ -4,6 +4,7 @@ NOSEND=1
 NOUPLOAD=1
 
 FILES="
+ $(dirname $0)/tapper-autoreport
  ./tapper-autoreport
  /data/tapper/autoreport/tapper-autoreport
  /opt/tapper/bin/tapper-autoreport
