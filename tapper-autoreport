@@ -1170,6 +1170,22 @@ prepare_information() {
     fi
 } # prepare_information()
 
+tapper_read_config_key () {
+    key="${1:-test_run}"
+
+    echo $(grep -E "^ *$key: " /etc/tapper |cut -d: -f2)
+}
+
+tapper_output_dir () {
+    echo "$(tapper_read_config_key output_dir)/$(tapper_read_config_key test_run)" | sed -e 's/\/\+/\//g'
+}
+
+tapper_all_meta () {
+    prepare_information
+    tapper_suite_meta
+    tapper_section_meta
+}
+
 tapper_suite_meta() {
     echo "# Tapper-section:                  $suite_name";
     echo "# Tapper-suite-name:               $suite_name";
