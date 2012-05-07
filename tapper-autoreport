@@ -154,6 +154,13 @@ require_x86_64 () {
     fi
 }
 
+is_running_in_xen_dom0 () {
+    echo ""
+    # ls /sys/hypervisor/      # different in Xen versions, pvops, distributions, etc.
+    # /proc/xen
+    # cat /sys/hypervisor/type   --> xen     (pvops feature?)
+}
+
 # check if we are in a Xen guest
 # Note:
 #   In Xen the dom0 reports the same 'hypervisor' flag and CPUID entry
