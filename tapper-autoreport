@@ -1546,6 +1546,16 @@ done_testing () {
 
 # =====================================================
 
+function recover_kill {
+    ok 1 'GOT KILLED EXTERNALLY'
+    done_testing
+    exit
+}
+
+trap "recover_kill" SIGTERM SIGHUP SIGINT SIGKILL
+
+# =====================================================
+
 # up to here functions are sourced by test scripts
 
 [ "$1" == "--import-utils" ] && return $_SUCCESS
