@@ -294,20 +294,9 @@ has_kvm_guests () {
 get_xen_tool() {
     which xl 2> /dev/null || which xm 2> /dev/null
 }
-get_number_xen_guests() {
-    XL=$(get_xen_tool) || return $_FAILURE
-    res=$($XL list | wc -l)
-    if [ -n "$res" -a "$res" -ge 2 ] ; then
-    	echo "$((res-2))"
-    	return $_SUCCESS
-    else
-    	echo "0"
-    	return $_FAILURE
-    fi
-}
 
 get_number_xen_guests() {
-    XL=$(which xl 2> /dev/null || which xm 2> /dev/null)
+    XL=$(get_xen_tool) || return $_FAILURE
     res=$($XL list | wc -l)
     if [ -n "$res" -a "$res" -ge 2 ] ; then
     	echo "$((res-2))"
