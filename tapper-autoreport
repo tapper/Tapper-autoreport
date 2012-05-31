@@ -1227,7 +1227,7 @@ tapper_xen_dom0_kernel () {
 
 tapper_xen_changeset () {
     if [ -r /sys/hypervisor/properties/changeset ] ; then
-        cat /sys/hypervisor/properties/changeset
+        cat /sys/hypervisor/properties/changeset | sed -e 's/^.* \([^ ]*\)/\1/'
     else
         XL=$(get_xen_tool) || return $_FAILURE
         echo $($XL info|grep '^xen_changeset.*:'|sed -e 's/^.* \([^ ]*\)/\1/')
