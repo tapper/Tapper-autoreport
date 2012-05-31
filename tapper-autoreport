@@ -1026,7 +1026,7 @@ has_kernel_release_min_3 () {
     # check if current LK 1st level release number is greater or equal release_req
     release_req="${1:-}"
     [ "$release_req" -ne $(echo $release_req|sed -e 's/^\([0-9]\+\).*/\1/') ] && return $_FAILURE
-    [ $(get_kernel_release_2) -ge "$release_req" ] && return $_SUCCESS
+    [ $(get_kernel_release_3) -ge "$release_req" ] && return $_SUCCESS
     return $_FAILURE
 }
 
