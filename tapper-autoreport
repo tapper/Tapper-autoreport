@@ -1566,7 +1566,7 @@ trap "recover_kill" SIGTERM SIGHUP SIGINT SIGKILL
 
 # up to here functions are sourced by test scripts
 
-[ "$1" == "--import-utils" ] && return $_SUCCESS
+[ "$1" == "--import-utils" ] && prepare_information && return $_SUCCESS
 [ "$1" == "--help" ]         && tapper_help && exit $_SUCCESS
 [ "$1" == "--version" ]      && tapper_version && exit $_SUCCESS
 
