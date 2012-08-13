@@ -132,7 +132,7 @@ require_amd_family_range () {
         return $_SUCCESS
     else
         vendor=$(get_vendor);
-        fam=$(get_cpu_family);
+        fam=$(printf "0x%x" $(get_cpu_family));
         explanation="${3:-Family $vendor/$fam does not match AMD/$min..$max}"
         autoreport_skip_all "$explanation"
     fi
