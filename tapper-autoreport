@@ -526,35 +526,6 @@ prepare_kernel_sources () {
     fi
 }
 
-# checks for availability of kernel sources
-has_kernel_sources () {
-    if [ -e /lib/modules/`uname -r`/build ]; then
-        return $_SUCCESS
-    else
-        return $_FAILURE
-    fi
-}
-
-# stops testscript if kernel sources aren't available
-require_kernel_sources () {
-    explanation="${1:-Missing kernel sources}"
-    if has_kernel_sources ; then
-        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_sources" ; fi
-        return $_SUCCESS
-    else
-        autoreport_skip_all "$explanation"
-    fi
-}
-
-# prepares kernel sources
-prepare_kernel_sources () {
-    if [ -d /usr/src/linux ]; then
-        cd /usr/src/linux
-        make oldconfig prepare modules_prepare >/dev/null
-        cd - >/dev/null
-    fi
-}
-
 # disables core performance boosting for reproducable and well scaling
 # benchmarks. Tries hard to learn the actual state and to really disable
 # it. Diagnostic messages will be print to stdout, the return value
