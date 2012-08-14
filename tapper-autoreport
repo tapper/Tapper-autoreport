@@ -971,8 +971,8 @@ version_number_le () {
 }
 
 has_kernel_release_min () {
-    echo "IMPLEMENT ME WITH TYPICAL VERSION NUMBER SEMANTICS - IT'S EASY"
-    exit 1
+    _ta_autoreport_v="${1:-0}"
+    version_number_compare $(get_kernel_release) -gt $_ta_autoreport_v
 }
 
 has_kernel_release_min_1 () {
@@ -1029,6 +1029,17 @@ require_kernel_release_min_3 () {
     explanation="${2:-Linux Kernel must be newer than x.x-${release_req}}"
     if has_kernel_release_min_3 "$release_req"; then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_release_min_3 $release_req" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+require_kernel_release_min () {
+    release_req="${1:-}"
+    explanation="${2:-Linux Kernel must be newer than ${release_req}}"
+    if has_kernel_release_min "$release_req"; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_kernel_release_min $release_req" ; fi
         return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
