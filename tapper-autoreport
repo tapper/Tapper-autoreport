@@ -1394,7 +1394,7 @@ upload_files() {
         (
             echo "#! upload $reportid $file $filetype"
             cat $file
-        ) | bash -c $MYNETCAT
+        ) | $MYNETCAT
     done
 }
 
@@ -1511,7 +1511,7 @@ autoreport_start () {
         if [ ! "x1" = "x$NOSEND" ] ; then
             MYNETCAT="$NETCAT $TAPPER_REPORT_SERVER $TAPPER_REPORT_PORT"
             # echo    "# Reporting:  $MYNETCAT ..." 1>&2
-            output=$( (autoreport_main | bash -c $MYNETCAT ; if [ "x1" = "x$NOSEND" ] ; then echo $NOSEND ; fi ) | tail -1 )
+            output=$( (autoreport_main | $MYNETCAT ; if [ "x1" = "x$NOSEND" ] ; then echo $NOSEND ; fi ) | tail -1 )
             reportid=$(echo $output | sed -e 's/^.*::Reports::Receiver. Protocol is TAP. Your report id: //')
             if [ ! "x1" = "x$NOSEND" ] ; then
                 echo -n "# http://$TAPPER_REPORT_SERVER" 1>&2
