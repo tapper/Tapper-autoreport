@@ -139,7 +139,7 @@ require_amd_family_range () {
 }
 
 get_number_cpus () {
-    grep -c "^bogomips" /proc/cpuinfo
+    getconf _NPROCESSORS_ONLN
 }
 
 # check sysfs whether cpu has L3 cache
@@ -1114,8 +1114,7 @@ prepare_information() {
         else
             cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
         fi
-        cpucount=$(grep -i 'bogomips.*:' < /proc/cpuinfo | wc -l);
-        echo "$cpucount cores [$cpu]";
+        echo "$(get_number_cpus) cores [$cpu]";
     )
     # TODO: bogomips from /proc/cpuinfo
 
