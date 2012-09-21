@@ -138,6 +138,53 @@ require_amd_family_range () {
     fi
 }
 
+# Checks all nodes for NB devices with one of the supplied PCI device ids
+# Note: Call it separately for different PCI device functions
+has_amd_nb_function_id () {
+    devids=${@:-"0xffffffff"}
+
+    for devid in $devids; do
+        devid=$(printf '0x%x' $devid)
+        function=$(printf '%x' $(($devid & 0xf)))
+        nbdevs="/sys/bus/pci/devices/0000:00:1[89abcdef].${function}"
+
+        [ $(ls $nbdevs 2>/dev/null | wc -l) -gt 0 ] || continue
+
+        nodes=0
+        devices=0
+        for nbdev in $nbdevs; do
+            let nodes++
+
+            vendor=$(cat $nbdev/vendor 2>/dev/null)
+            if [ "$vendor" != "0x1022" ]; then
+                return $_FAILURE
+            fi
+
+            device=$(cat $nbdev/device 2>/dev/null)
+            if [ "$device" = "$devid" ]; then
+                let devices++
+            fi
+        done
+
+        if [ $devices -gt 0 -a $devices -eq $nodes ]; then
+            return $_SUCCESS
+        fi
+    done
+
+    return $_FAILURE
+}
+
+# Stops if no NB devices with one of supplied PCI device ids exist on all nodes
+# Note: Call it separately for different PCI device functions
+require_amd_nb_function_id () {
+    devids=${@:-"0xffffffff"}
+    if has_amd_nb_function_id "$devids"; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_amd_nb_function_id" ; fi
+    else
+        autoreport_skip_all "No supported AMD northbridge function devices"
+    fi
+}
+
 get_number_cpus () {
     getconf _NPROCESSORS_ONLN
 }
