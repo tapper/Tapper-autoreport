@@ -829,8 +829,12 @@ autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
     NOUPLOAD=1
-    autoreport_start
-    exit 0
+    if [[ -n $LOOP ]]; then
+        exit 254
+    else
+        autoreport_start
+        exit 0
+    fi
 }
 
 # ==================== TAP utils ====================
@@ -908,8 +912,12 @@ require_ok () {
     fi
 
     # similar to SKIPALL but report what we have so far
-    autoreport_start
-    exit 0
+    if [[ -n $LOOP ]]; then
+        exit 254
+    else
+        autoreport_start
+        exit 0
+    fi
 }
 
 ok () {
