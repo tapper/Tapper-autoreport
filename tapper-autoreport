@@ -813,17 +813,34 @@ write_msr() (
     perl -e 'my $value=pack("Q",hex($ARGV[1]));sysseek(STDOUT,hex($ARGV[0]),0);syswrite(STDOUT,$value,8) or exit(1);' $1 $2 > /dev/cpu/$cpu/msr
 )
 
-# reads CPUID and filters for a certain bit
-# usage: get_cpuid_bit <leafnr_in_hex> e[abcd]x <bitnr>
-# example: get_cpuid_bit 0x80000001 ecx 2
-# outputs either 0 or 1 to stdout
-# return value is 0 for success, 1 for invalid CPUID leaf, 2 for permission
-get_cpuid_bit() (
-	[ $# -lt 3 ] && return 3
-	cpu=${4:-0}
-	[ -r /dev/cpu/$cpu/cpuid ] || return 2
-	perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%d\n",($regs[ord(substr($ARGV[1],1,1))-ord("a")] >> $ARGV[2]) & 1);' $1 $2 $3 < /dev/cpu/$cpu/cpuid
-)
+# Reads an entire cpuid register
+# Usage: get_cpuid_reg <leafnr_in_hex> e[abcd]x
+# Example: get_cpuid_reg 0x80000001 ecx
+# Outputs the decimal register value to stdout
+# Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
+get_cpuid_reg() {
+    [ $# -lt 2 ] && return 3
+    cpu=${3:-0}
+
+    # try to load the cpuid module if not already done
+    [ -c /dev/cpu/$cpu/cpuid ] || modprobe cpuid > /dev/null 2>&1
+    [ -r /dev/cpu/$cpu/cpuid ] || return 2
+
+    perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%d\n",$regs[ord(substr($ARGV[1],1,1))-ord("a")]);' $1 $2 < /dev/cpu/$cpu/cpuid
+}
+
+# Reads a cpuid register and filters a certain bit
+# Usage: get_cpuid_bit <leafnr_in_hex> e[abcd]x <bitnr>
+# Example: get_cpuid_bit 0x80000001 ecx 2
+# Outputs either 0 or 1 to stdout
+# Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
+get_cpuid_bit() {
+    [ $# -lt 3 ] && return 3
+    cpu=${4:-0}
+    reg=$(get_cpuid_reg $1 $2 $4) || return $?
+
+    echo $(($reg >> $3 & 1))
+}
 
 autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
