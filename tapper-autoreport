@@ -186,7 +186,7 @@ require_amd_nb_function_id () {
 }
 
 get_number_cpus () {
-    getconf _NPROCESSORS_ONLN
+    (getconf _NPROCESSORS_ONLN || grep -ci "^bogomips" /proc/cpuinfo || echo -1) 2>/dev/null
 }
 
 # check sysfs whether cpu has L3 cache
