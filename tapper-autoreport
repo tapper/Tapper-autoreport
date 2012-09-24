@@ -73,6 +73,11 @@ arm_cpu () {
     grep -Eqi 'Processor.*:.*ARM' /proc/cpuinfo
 }
 
+# outputs cpu stepping from /proc/cpuinfo
+get_cpu_stepping () {
+    echo $(echo $(grep "^stepping" /proc/cpuinfo |head -1|cut -d: -f2))
+}
+
 # outputs cpu model from /proc/cpuinfo
 get_cpu_model () {
     echo $(echo $(grep "^model[^ ]" /proc/cpuinfo |head -1|cut -d: -f2))
