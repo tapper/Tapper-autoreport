@@ -1132,6 +1132,20 @@ is_element_in_list () {
     return $result
 }
 
+# stops testscript if file not available
+criticality_level () {
+    _ta_criticality_declared="${1:-5}"
+    _ta_criticality_allowed="${CRITICALITY:-0}"
+    explanation="${2:-Too high criticality level $_ta_criticality_declared (CRITICALITY=$_ta_criticality_allowed)}"
+    if [ $_ta_criticality_declared -le $_ta_criticality_allowed ] ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "criticality level $_ta_criticality_declared <= $_ta_criticality_allowed" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+
 prepare_information() {
 
     # ===== control variables defaults ==================
