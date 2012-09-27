@@ -126,13 +126,22 @@ cpu_family_max () {
     [ $(($fam)) -le $(($max)) ]
 }
 
+is_amd_family_range () {
+    min="${1:-0}"
+    max="${2:-$min}"
+    if vendor_amd && cpu_family_min "$min" && cpu_family_max "$max" ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
 # stops testscript if not matching required cpu family from
 # /proc/cpuinfo of a minimum/maximum range
 require_amd_family_range () {
     min="${1:-0}"
     max="${2:-$min}"
-    if vendor_amd && cpu_family_min "$min" && cpu_family_max "$max" ;
-    then
+    if is_amd_family_range "$min" "$max" ; then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_amd_family_range $min $max" ; fi
         return $_SUCCESS
     else
