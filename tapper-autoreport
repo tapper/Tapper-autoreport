@@ -885,7 +885,7 @@ autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
     NOUPLOAD=1
-    if [[ -n $LOOP ]]; then
+    if [[ -n $EXIT_ON_SKIPALL ]]; then
         exit 254
     else
         autoreport_start
@@ -968,7 +968,7 @@ require_ok () {
     fi
 
     # similar to SKIPALL but report what we have so far
-    if [[ -n $LOOP ]]; then
+    if [[ -n $EXIT_ON_SKIPALL ]]; then
         exit 254
     else
         autoreport_start
