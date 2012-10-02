@@ -881,6 +881,70 @@ get_cpuid_bit() {
     echo $(($reg >> $3 & 1))
 }
 
+# Get a space separated list of CPUs from a sysfs cpumap file
+# Example:
+#   get_cpus_from_cpumap /sys/devices/system/node/node0/cpumap
+#   0 1 2 3
+# Notes:
+#   Result may be an empty string
+#   Result may be -1 in case of parsing errors
+get_cpus_from_cpumap () {
+    cpumap="${1}"
+    cpus=""
+    wordcnt=$(cat $cpumap | sed -e 's/,/ /g' | wc -w)
+
+    if [ $wordcnt -eq 0 ]; then
+        echo -1
+        return
+    fi
+
+    for i in $(seq $wordcnt -1 1); do
+        offset=$(($wordcnt - $i))
+        word=$((0x$(cat $cpumap | cut -d , -f $i)))
+        if [ $? -ne 0 ]; then cpus=-1; break; fi
+        for j in $(seq 0 31); do
+            if [ $(($word >> $j & 1 )) -eq 1 ]; then
+                cpus="$cpus $((32 * $offset + $j))"
+            fi
+        done
+    done
+
+    echo $cpus
+}
+
+# Get a space separated list of CPUs from a sysfs cpulist file
+# Example:
+#   get_cpus_from_cpulist /sys/devices/system/cpu/online
+#   0 1 2 3
+# Notes:
+#   Result may be an empty string
+#   Result may be -1 in case of parsing errors
+get_cpus_from_cpulist () {
+    cpulist="${1}"
+    cpus=""
+    ranges=$(cat $cpulist | sed -e 's/,/ /g')
+
+    if [ -z "$ranges" ]; then
+        echo -1
+        return
+    fi
+
+    for range in $ranges; do
+        if echo $range | grep -q '^[0-9]\+-[0-9]\+$'; then
+            min=$(echo $range | sed 's/-[0-9]\+$//')
+            max=$(echo $range | sed 's/^[0-9]\+-//')
+            if [ $min -ge $max ]; then cpus=-1; break; fi
+            for cpu in $(seq $min $max); do cpus="$cpus $cpu"; done
+        elif echo $range | grep -q '^[0-9]\+$'; then
+            cpus="$cpus $range"
+        else
+            cpus=-1; break
+        fi
+    done
+
+    echo $cpus
+}
+
 autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
