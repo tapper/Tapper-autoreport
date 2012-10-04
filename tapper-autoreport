@@ -587,6 +587,100 @@ prepare_kernel_sources () {
     fi
 }
 
+# Enable CPU frequency scaling and set sane defaults
+# - Makes sure the appropriate cpufreq driver is loaded
+# - Enables ondemand governor on all cores
+# - Sets the boost state, on=1 (default), off=0
+enable_cpufreq () {
+    booststate="$1"
+    [ "$booststate" != "0" ] && booststate=1
+
+    # Load cpufreq driver module
+    for module in acpi-cpufreq powernow-k8; do
+        [ -d /sys/devices/system/cpu/cpu0/cpufreq ] && break
+        modprobe $module 2>/dev/null
+    done
+    if [ ! -d /sys/devices/system/cpu/cpu0/cpufreq ]; then
+        echo "failed to load cpufreq driver"
+        return $_FAILURE
+    fi
+
+    # Load ondemand governor module and set ondemand governor
+    if ! grep -q ondemand /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors; then
+        modprobe cpufreq-ondemand 2>/dev/null
+    fi
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        echo ondemand > $cpu 2>/dev/null
+        if [ "$(cat $cpu)" != "ondemand" ]; then
+            echo "failed to set ondemand governor"
+            return $_FAILURE
+        fi
+    done
+
+    # Set requested boost state
+    if [ -f /sys/devices/system/cpu/cpufreq/boost ]; then
+        interfaces="/sys/devices/system/cpu/cpufreq/boost"
+    elif [ -f /sys/devices/system/cpu/cpu0/cpufreq/cpb ]; then
+        interfaces="/sys/devices/system/cpu/cpu*/cpufreq/cpb"
+    elif has_cpufeature cpb; then
+        if grep -q " show_cpb\| show_global_boost" /proc/kallsyms; then
+            echo "failed to find sysfs boost state interface"
+        elif [ $booststate -eq 0 ]; then
+            echo "cpufreq driver doesn't provide sysfs boost state interface"
+        else
+            return $_SUCCESS
+        fi
+        return $_FAILURE
+    else
+        return $_SUCCESS
+    fi
+    for interface in $interfaces; do
+       echo $booststate > $interface 2>/dev/null
+       if [ "$(cat $interface)" != "$booststate" ]; then
+            echo "failed to set requested boost state"
+            return $_FAILURE
+       fi
+    done
+
+    return $_SUCCESS
+}
+
+require_cpufreq_enabled () {
+    explanation="${1:-CPUFreq not available}"
+    reason=$(enable_cpufreq 1)
+    if [ $? -eq $_SUCCESS ] ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufreq_enabled" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation ($reason)"
+    fi
+}
+
+require_cpb_disabled () {
+    explanation="${1:-Failed to disable Core Boosting}"
+    reason=$(enable_cpufreq 0)
+    if [ $? -eq $_SUCCESS ] ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufreq_enabled" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation ($reason)"
+    fi
+}
+
+request_cpufreq_enabled () {
+    todo="# TODO $(enable_cpufreq 1)" && todo=""
+    ok $? "request_cpufreq_enabled $todo"
+    [ -n "$todo" ] && return $_FAILURE
+    return $_SUCCESS
+}
+
+request_cpb_disabled () {
+    todo="# TODO $(enable_cpufreq 0)" && todo=""
+    ok $? "request_cpb_disabled $todo"
+    [ -n "$todo" ] && return $_FAILURE
+    return $_SUCCESS
+}
+
 # disables core performance boosting for reproducable and well scaling
 # benchmarks. Tries hard to learn the actual state and to really disable
 # it. Diagnostic messages will be print to stdout, the return value
