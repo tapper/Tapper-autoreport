@@ -159,16 +159,15 @@ has_amd_nb_function_id () {
 
     for devid in $devids; do
         devid=$(printf '0x%x' $devid)
-        function=$(printf '%x' $(($devid & 0xf)))
-        nbdevs="/sys/bus/pci/devices/0000:00:1[89abcdef].${function}"
+        nbdevs="/sys/bus/pci/devices/0000:00:1[89abcdef].*"
 
         [ $(ls $nbdevs 2>/dev/null | wc -l) -gt 0 ] || continue
 
-        nodes=0
+        f0devs="/sys/bus/pci/devices/0000:00:1[89abcdef].0/vendor"
+        northbridges=$(ls $f0devs 2>/dev/null | wc -l)
+
         devices=0
         for nbdev in $nbdevs; do
-            let nodes++
-
             vendor=$(cat $nbdev/vendor 2>/dev/null)
             if [ "$vendor" != "0x1022" ]; then
                 return $_FAILURE
@@ -180,7 +179,7 @@ has_amd_nb_function_id () {
             fi
         done
 
-        if [ $devices -gt 0 -a $devices -eq $nodes ]; then
+        if [ $devices -gt 0 -a $devices -eq $northbridges ]; then
             return $_SUCCESS
         fi
     done
