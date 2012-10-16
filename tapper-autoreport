@@ -947,11 +947,11 @@ write_msr() (
 )
 
 # Reads an entire cpuid register
-# Usage: get_cpuid_reg <leafnr_in_hex> e[abcd]x
-# Example: get_cpuid_reg 0x80000001 ecx
+# Usage: get_cpuid_register <leafnr_in_hex> e[abcd]x
+# Example: get_cpuid_register 0x80000001 ecx
 # Outputs the decimal register value to stdout
 # Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
-get_cpuid_reg() {
+get_cpuid_register() {
     [ $# -lt 2 ] && return 3
     cpu=${3:-0}
 
@@ -970,7 +970,7 @@ get_cpuid_reg() {
 get_cpuid_bit() {
     [ $# -lt 3 ] && return 3
     cpu=${4:-0}
-    reg=$(get_cpuid_reg $1 $2 $4) || return $?
+    reg=$(get_cpuid_register $1 $2 $4) || return $?
 
     echo $(($reg >> $3 & 1))
 }
