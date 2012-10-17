@@ -416,7 +416,7 @@ is_running_in_kvm_guest () {
 
     if [ -c /dev/cpu/0/cpuid ] ; then
         virtvendor=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 2> /dev/null)
-        [ "$virtvendor" = "KVMKVMVKM" ]
+        [ "$virtvendor" = "KVMKVMKVM" ]
         return $?
     fi
     return 1
