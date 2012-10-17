@@ -926,8 +926,7 @@ read_msr() (
     fi
     [ -r /dev/cpu/$cpu/msr ] || return 2
 
-    # TODO: check whether /opt/tapper Perl available and has config -Duse64bitint and then use that as $PERL
-    perl -e 'my $msr;sysseek(STDIN,hex($ARGV[0]),0);sysread(STDIN,$msr,8) or exit(1);printf("%016x\n",unpack("Q*",$msr));' $1 < /dev/cpu/$cpu/msr
+    perl -e 'my $msr;sysseek(STDIN,hex($ARGV[0]),0);sysread(STDIN,$msr,8) or exit(1);my @words=unpack("LL",$msr);printf("%08x%08x\n",$words[1],$words[0]);' $1 < /dev/cpu/$cpu/msr
 )
 
 # writes a MSR via the /dev/cpu/<n>/msr device
