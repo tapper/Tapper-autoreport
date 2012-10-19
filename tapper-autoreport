@@ -617,18 +617,17 @@ enable_cpufreq () {
     done
 
     # Set requested boost state
-    if [ -f /sys/devices/system/cpu/cpufreq/boost ]; then
+    if ! has_cpufeature cpb; then
+        return $_SUCCESS
+    elif [ -f /sys/devices/system/cpu/cpufreq/boost ]; then
         interfaces="/sys/devices/system/cpu/cpufreq/boost"
-    elif [ -f /sys/devices/system/cpu/cpu0/cpufreq/cpb ]; then
+    elif [ $(ls /sys/devices/system/cpu/cpu*/cpufreq/cpb 2>/dev/null | wc -l) -gt 0 ]; then
         interfaces="/sys/devices/system/cpu/cpu*/cpufreq/cpb"
-    elif has_cpufeature cpb; then
-        if grep -q " show_cpb\| show_global_boost" /proc/kallsyms; then
-            echo "failed to find sysfs boost state interface"
-        elif [ $booststate -eq 0 ]; then
-            echo "cpufreq driver doesn't provide sysfs boost state interface"
-        else
-            return $_SUCCESS
-        fi
+    elif grep -q " show_cpb\| show_global_boost" /proc/kallsyms; then
+        echo "failed to find sysfs boost state interface"
+        return $_FAILURE
+    elif [ $booststate -eq 0 ]; then
+        echo "cpufreq driver doesn't provide sysfs boost state interface"
         return $_FAILURE
     else
         return $_SUCCESS
