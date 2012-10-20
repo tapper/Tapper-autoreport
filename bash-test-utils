@@ -75,6 +75,10 @@ arm_cpu () {
     grep -Eqi 'Processor.*:.*ARM' /proc/cpuinfo
 }
 
+# outputs cpu stepping from /proc/cpuinfo
+get_cpu_stepping () {
+    echo $(echo $(grep "^stepping" /proc/cpuinfo |head -1|cut -d: -f2))
+}
 # outputs cpu model from /proc/cpuinfo
 get_cpu_model () {
     echo $(echo $(grep "^model[^ ]" /proc/cpuinfo |head -1|cut -d: -f2))
@@ -123,13 +127,22 @@ cpu_family_max () {
     [ $(($fam)) -le $(($max)) ]
 }
 
+is_amd_family_range () {
+    min="${1:-0}"
+    max="${2:-$min}"
+    if vendor_amd && cpu_family_min "$min" && cpu_family_max "$max" ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
 # stops testscript if not matching required cpu family from
 # /proc/cpuinfo of a minimum/maximum range
 require_amd_family_range () {
     min="${1:-0}"
     max="${2:-$min}"
-    if vendor_amd && cpu_family_min "$min" && cpu_family_max "$max" ;
-    then
+    if is_amd_family_range "$min" "$max" ; then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok 0 "require_amd_family_range $min $max" ; fi
         return $_SUCCESS
     else
@@ -140,8 +153,54 @@ require_amd_family_range () {
     fi
 }
 
+# Checks all nodes for NB devices with one of the supplied PCI device ids
+# Note: Call it separately for different PCI device functions
+has_amd_nb_function_id () {
+    devids=${@:-"0xffffffff"}
+
+    for devid in $devids; do
+        devid=$(printf '0x%x' $devid)
+        nbdevs="/sys/bus/pci/devices/0000:00:1[89abcdef].*"
+
+        [ $(ls $nbdevs 2>/dev/null | wc -l) -gt 0 ] || continue
+
+        f0devs="/sys/bus/pci/devices/0000:00:1[89abcdef].0/vendor"
+        northbridges=$(ls $f0devs 2>/dev/null | wc -l)
+
+        devices=0
+        for nbdev in $nbdevs; do
+            vendor=$(cat $nbdev/vendor 2>/dev/null)
+            if [ "$vendor" != "0x1022" ]; then
+                return $_FAILURE
+            fi
+
+            device=$(cat $nbdev/device 2>/dev/null)
+            if [ "$device" = "$devid" ]; then
+                let devices++
+            fi
+        done
+
+        if [ $devices -gt 0 -a $devices -eq $northbridges ]; then
+            return $_SUCCESS
+        fi
+    done
+
+    return $_FAILURE
+}
+
+# Stops if no NB devices with one of supplied PCI device ids exist on all nodes
+# Note: Call it separately for different PCI device functions
+require_amd_nb_function_id () {
+    devids=${@:-"0xffffffff"}
+    if has_amd_nb_function_id "$devids"; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_amd_nb_function_id" ; fi
+    else
+        autoreport_skip_all "No supported AMD northbridge function devices"
+    fi
+}
+
 get_number_cpus () {
-    grep -c "^bogomips" /proc/cpuinfo
+    (getconf _NPROCESSORS_ONLN || grep -ci "^bogomips" /proc/cpuinfo || echo -1) 2>/dev/null
 }
 
 # check sysfs whether cpu has L3 cache
@@ -358,7 +417,7 @@ is_running_in_kvm_guest () {
 
     if [ -c /dev/cpu/0/cpuid ] ; then
         virtvendor=$(dd if=/dev/cpu/0/cpuid bs=16 skip=67108864 count=1 2> /dev/null)
-        [ "$virtvendor" = "KVMKVMVKM" ]
+        [ "$virtvendor" = "KVMKVMKVM" ]
         return $?
     fi
     return 1
@@ -428,7 +487,7 @@ require_running_in_virtualized_guest () {
 # checks for a feature flag in /proc/cpuinfo
 has_cpufeature () {
     _ta_feature="${1:-UNKNOWNFEATURE}"
-    if cat /proc/cpuinfo | grep -E '^flags\W*:' | head -1 | grep -q "\<${_ta_feature}\>" 2>&1 ; then
+    if cat /proc/cpuinfo | grep -E '^flags\W*:' | head -1 | sed -e 's/^flags\W*://' | grep -q "\<${_ta_feature}\>" 2>&1 ; then
         return $_SUCCESS
     else
         return $_FAILURE
@@ -473,6 +532,99 @@ require_kernel_config () {
     fi
 }
 
+# Enable CPU frequency scaling and set sane defaults
+# - Makes sure the appropriate cpufreq driver is loaded
+# - Enables ondemand governor on all cores
+# - Sets the boost state, on=1 (default), off=0
+enable_cpufreq () {
+    booststate="$1"
+    [ "$booststate" != "0" ] && booststate=1
+
+    # Load cpufreq driver module
+    for module in acpi-cpufreq powernow-k8; do
+        [ -d /sys/devices/system/cpu/cpu0/cpufreq ] && break
+        modprobe $module 2>/dev/null
+    done
+    if [ ! -d /sys/devices/system/cpu/cpu0/cpufreq ]; then
+        echo "failed to load cpufreq driver"
+        return $_FAILURE
+    fi
+
+    # Load ondemand governor module and set ondemand governor
+    if ! grep -q ondemand /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors; then
+        modprobe cpufreq-ondemand 2>/dev/null
+    fi
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        echo ondemand > $cpu 2>/dev/null
+        if [ "$(cat $cpu)" != "ondemand" ]; then
+            echo "failed to set ondemand governor"
+            return $_FAILURE
+        fi
+    done
+
+    # Set requested boost state
+    if ! has_cpufeature cpb; then
+        return $_SUCCESS
+    elif [ -f /sys/devices/system/cpu/cpufreq/boost ]; then
+        interfaces="/sys/devices/system/cpu/cpufreq/boost"
+    elif [ $(ls /sys/devices/system/cpu/cpu*/cpufreq/cpb 2>/dev/null | wc -l) -gt 0 ]; then
+        interfaces="/sys/devices/system/cpu/cpu*/cpufreq/cpb"
+    elif grep -q " show_cpb\| show_global_boost" /proc/kallsyms; then
+        echo "failed to find sysfs boost state interface"
+        return $_FAILURE
+    elif [ $booststate -eq 0 ]; then
+        echo "cpufreq driver doesn't provide sysfs boost state interface"
+        return $_FAILURE
+    else
+        return $_SUCCESS
+    fi
+    for interface in $interfaces; do
+       echo $booststate > $interface 2>/dev/null
+       if [ "$(cat $interface)" != "$booststate" ]; then
+            echo "failed to set requested boost state"
+            return $_FAILURE
+       fi
+    done
+
+    return $_SUCCESS
+}
+
+require_cpufreq_enabled () {
+    explanation="${1:-CPUFreq not available}"
+    reason=$(enable_cpufreq 1)
+    if [ $? -eq $_SUCCESS ] ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufreq_enabled" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation ($reason)"
+    fi
+}
+
+require_cpb_disabled () {
+    explanation="${1:-Failed to disable Core Boosting}"
+    reason=$(enable_cpufreq 0)
+    if [ $? -eq $_SUCCESS ] ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_cpufreq_enabled" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation ($reason)"
+    fi
+}
+
+request_cpufreq_enabled () {
+    todo="# TODO $(enable_cpufreq 1)" && todo=""
+    ok $? "request_cpufreq_enabled $todo"
+    [ -n "$todo" ] && return $_FAILURE
+    return $_SUCCESS
+}
+
+request_cpb_disabled () {
+    todo="# TODO $(enable_cpufreq 0)" && todo=""
+    ok $? "request_cpb_disabled $todo"
+    [ -n "$todo" ] && return $_FAILURE
+    return $_SUCCESS
+}
+
 # disables core performance boosting for reproducable and well scaling
 # benchmarks. Tries hard to learn the actual state and to really disable
 # it. Diagnostic messages will be print to stdout, the return value
@@ -483,7 +635,7 @@ require_kernel_config () {
 #   ok $? "disable CPB $todostem$expl"
 # or a fatal version ending the script:
 #   expl=$(disable_cpb)
-#   require_ok "disable CPB"
+#   require_ok $? "disable CPB"
 # or: just try to disable it, but don't care if we fail
 #   disable_cpb > /dev/null
 disable_cpb() {
@@ -636,6 +788,31 @@ require_file () {
     fi
 }
 
+# checks whether the script's criticality is in allowed range
+has_crit_level () {
+    _ta_crit_level="${1:-5}"
+    _ta_crit_level_allowed="${CRITICALITY:-0}"
+    if [ $_ta_crit_level -le $_ta_crit_level_allowed ] ; then
+        return $_SUCCESS;
+    else
+        return $_FAILURE
+    fi
+}
+
+# stops testscript if script's criticality is not in allowed range
+require_crit_level () {
+    _ta_crit_level="${1:-5}"
+    _ta_crit_level_allowed="${CRITICALITY:-0}"
+    explanation="${2:-Too high criticality level: $_ta_crit_level (CRITICALITY=$_ta_crit_level_allowed)}"
+
+    if has_crit_level $_ta_crit_level ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "criticality level $_ta_crit_level (CRITICALITY=$_ta_crit_level_allowed)" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 require_root () {
     explanation="${1:-Need to run as root}"
     ID=$(id|cut -d" " -f1|cut -d= -f2|cut -d\( -f1)
@@ -682,7 +859,7 @@ read_msr() (
     fi
     [ -r /dev/cpu/$cpu/msr ] || return 2
 
-    perl -e 'my $msr;sysseek(STDIN,hex($ARGV[0]),0);sysread(STDIN,$msr,8) or exit(1);printf("%016x\n",unpack("Q*",$msr));' $1 < /dev/cpu/$cpu/msr
+    perl -e 'my $msr;sysseek(STDIN,hex($ARGV[0]),0);sysread(STDIN,$msr,8) or exit(1);my @words=unpack("LL",$msr);printf("%08x%08x\n",$words[1],$words[0]);' $1 < /dev/cpu/$cpu/msr
 )
 
 # writes a MSR via the /dev/cpu/<n>/msr device
@@ -701,17 +878,98 @@ write_msr() (
     perl -e 'my $value=pack("Q",hex($ARGV[1]));sysseek(STDOUT,hex($ARGV[0]),0);syswrite(STDOUT,$value,8) or exit(1);' $1 $2 > /dev/cpu/$cpu/msr
 )
 
-# reads CPUID and filters for a certain bit
-# usage: get_cpuid_bit <leafnr_in_hex> e[abcd]x <bitnr>
-# example: get_cpuid_bit 0x80000001 ecx 2
-# outputs either 0 or 1 to stdout
-# return value is 0 for success, 1 for invalid CPUID leaf, 2 for permission
-get_cpuid_bit() (
-	[ $# -lt 3 ] && return 3
-	cpu=${4:-0}
-	[ -r /dev/cpu/$cpu/cpuid ] || return 2
-	perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%d\n",($regs[ord(substr($ARGV[1],1,1))-ord("a")] >> $ARGV[2]) & 1);' $1 $2 $3 < /dev/cpu/$cpu/cpuid
-)
+# Reads an entire cpuid register
+# Usage: get_cpuid_register <leafnr_in_hex> e[abcd]x
+# Example: get_cpuid_register 0x80000001 ecx
+# Outputs the decimal register value to stdout
+# Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
+get_cpuid_register() {
+    [ $# -lt 2 ] && return 3
+    cpu=${3:-0}
+
+    # try to load the cpuid module if not already done
+    [ -c /dev/cpu/$cpu/cpuid ] || modprobe cpuid > /dev/null 2>&1
+    [ -r /dev/cpu/$cpu/cpuid ] || return 2
+
+    perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%d\n",$regs[ord(substr($ARGV[1],1,1))-ord("a")]);' $1 $2 < /dev/cpu/$cpu/cpuid
+}
+
+# Reads a cpuid register and filters a certain bit
+# Usage: get_cpuid_bit <leafnr_in_hex> e[abcd]x <bitnr>
+# Example: get_cpuid_bit 0x80000001 ecx 2
+# Outputs either 0 or 1 to stdout
+# Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
+get_cpuid_bit() {
+    [ $# -lt 3 ] && return 3
+    cpu=${4:-0}
+    reg=$(get_cpuid_register $1 $2 $4) || return $?
+
+    echo $(($reg >> $3 & 1))
+}
+
+# Get a space separated list of CPUs from a sysfs cpumap file
+# Example:
+#   get_cpus_from_cpumap /sys/devices/system/node/node0/cpumap
+#   0 1 2 3
+# Notes:
+#   Result may be an empty string
+#   Result may be -1 in case of parsing errors
+get_cpus_from_cpumap () {
+    cpumap="${1}"
+    cpus=""
+    wordcnt=$(cat $cpumap | sed -e 's/,/ /g' | wc -w)
+
+    if [ $wordcnt -eq 0 ]; then
+        echo -1
+        return
+    fi
+
+    for i in $(seq $wordcnt -1 1); do
+        offset=$(($wordcnt - $i))
+        word=$((0x$(cat $cpumap | cut -d , -f $i)))
+        if [ $? -ne 0 ]; then cpus=-1; break; fi
+        for j in $(seq 0 31); do
+            if [ $(($word >> $j & 1 )) -eq 1 ]; then
+                cpus="$cpus $((32 * $offset + $j))"
+            fi
+        done
+    done
+
+    echo $cpus
+}
+
+# Get a space separated list of CPUs from a sysfs cpulist file
+# Example:
+#   get_cpus_from_cpulist /sys/devices/system/cpu/online
+#   0 1 2 3
+# Notes:
+#   Result may be an empty string
+#   Result may be -1 in case of parsing errors
+get_cpus_from_cpulist () {
+    cpulist="${1}"
+    cpus=""
+    ranges=$(cat $cpulist | sed -e 's/,/ /g')
+
+    if [ -z "$ranges" ]; then
+        echo -1
+        return
+    fi
+
+    for range in $ranges; do
+        if echo $range | grep -q '^[0-9]\+-[0-9]\+$'; then
+            min=$(echo $range | sed 's/-[0-9]\+$//')
+            max=$(echo $range | sed 's/^[0-9]\+-//')
+            if [ $min -ge $max ]; then cpus=-1; break; fi
+            for cpu in $(seq $min $max); do cpus="$cpus $cpu"; done
+        elif echo $range | grep -q '^[0-9]\+$'; then
+            cpus="$cpus $range"
+        else
+            cpus=-1; break
+        fi
+    done
+
+    echo $cpus
+}
 
 autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
@@ -795,8 +1053,12 @@ require_ok () {
     fi
 
     # similar to SKIPALL but report what we have so far
-    autoreport_start
-    exit 0
+    if [[ -n $EXIT_ON_SKIPALL ]]; then
+        exit 254
+    else
+        autoreport_start
+        exit 0
+    fi
 }
 
 ok () {
@@ -968,8 +1230,7 @@ prepare_information() {
         else
             cpu=$(grep 'model name' < /proc/cpuinfo | cut -d: -f2- | head -1 | sed -e "s/^ *//");
         fi
-        cpucount=$(grep -i 'bogomips.*:' < /proc/cpuinfo | wc -l);
-        echo "$cpucount cores [$cpu]";
+        echo "$(get_number_cpus) cores [$cpu]";
     )
     # TODO: bogomips from /proc/cpuinfo
 
