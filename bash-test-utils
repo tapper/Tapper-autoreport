@@ -1303,28 +1303,28 @@ ltu_xen_version () {
 }
 
 ltu_xen_meta () {
-    echo "# Test-xen-dom0-kernel:          $(ltu_xen_dom0_kernel)"
-    echo "# Test-xen-version:              $(ltu_xen_version)"
-    echo "# Test-xen-changeset:            $(ltu_xen_changeset)"
-    echo "# Test-xen-base-os-description:  $(ltu_base_os_description)"
+    echo "# Test-xen-dom0-kernel: $(ltu_xen_dom0_kernel)"
+    echo "# Test-xen-version: $(ltu_xen_version)"
+    echo "# Test-xen-changeset: $(ltu_xen_changeset)"
+    echo "# Test-xen-base-os-description: $(ltu_base_os_description)"
 }
 
 ltu_kvm_meta () {
-    echo "# Test-kvm-version:              $(uname -r)"
-    echo "# Test-kvm-base-os-description:  $(ltu_base_os_description)"
+    echo "# Test-kvm-version: $(uname -r)"
+    echo "# Test-kvm-base-os-description: $(ltu_base_os_description)"
 }
 
 ltu_section_meta() {
     if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
-        echo "# Test-uname:                    $uname"
-        echo "# Test-osname:                   $osname"
-        echo "# Test-kernel:                   $kernelrelease"
-        echo "# Test-changeset:                $changeset"
-        echo "# Test-flags:                    $kernelflags"
-        echo "# Test-cpuinfo:                  $cpuinfo"
-        echo "# Test-ram:                      $ram"
-        echo "# Test-starttime-test-program:   $starttime_test_program"
-        echo "# Test-endtime-test-program:     $endtime_test_program"
+        echo "# Test-uname: $uname"
+        echo "# Test-osname: $osname"
+        echo "# Test-kernel: $kernelrelease"
+        echo "# Test-changeset: $changeset"
+        echo "# Test-flags: $kernelflags"
+        echo "# Test-cpuinfo: $cpuinfo"
+        echo "# Test-ram: $ram"
+        echo "# Test-starttime-test-program: $starttime_test_program"
+        echo "# Test-endtime-test-program: $endtime_test_program"
         if is_running_in_xen_dom0 ; then
             ltu_xen_meta
         fi
