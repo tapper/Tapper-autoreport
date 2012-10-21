@@ -1245,10 +1245,12 @@ prepare_information() {
 } # prepare_information()
 
 ltu_suite_meta() {
-    echo "# Test-section:                  $suite_name";
-    echo "# Test-suite-name:               $suite_name";
-    echo "# Test-suite-version:            $suite_version";
-    echo "# Test-machine-name:             $hostname";
+    if [[ -n $VERBOSE ]]; then
+        echo "# Test-section: $suite_name";
+        echo "# Test-suite-version: $suite_version";
+    fi
+    echo "# Test-suite-name: $suite_name";
+    echo "# Test-machine-name: $hostname";
 }
 
 ltu_base_os_description () {
@@ -1383,7 +1385,9 @@ autoreport_main() {
     if [ -n "$SKIPALL" ] ; then
         echo "$SKIPALL"
         ltu_suite_meta
-        ltu_section_meta
+        if [[ -n $VERBOSE ]]; then
+            ltu_section_meta
+        fi
         return
     fi
 
@@ -1397,7 +1401,9 @@ autoreport_main() {
 
     # ==================== meta info ====================
     ltu_suite_meta
-    ltu_section_meta
+    if [[ -n $VERBOSE ]]; then
+        ltu_section_meta
+    fi
 
     # =============== own headers (later entries win) ===============
     HEADERSCOUNT=${#HEADERS[@]}
