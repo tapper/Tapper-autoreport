@@ -891,7 +891,7 @@ get_cpuid_register() {
     [ -c /dev/cpu/$cpu/cpuid ] || modprobe cpuid > /dev/null 2>&1
     [ -r /dev/cpu/$cpu/cpuid ] || return 2
 
-    perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%d\n",$regs[ord(substr($ARGV[1],1,1))-ord("a")]);' $1 $2 < /dev/cpu/$cpu/cpuid
+    perl -e 'my $leaf;sysseek(STDIN, hex($ARGV[0]),0);sysread(STDIN,$leaf,16) or exit(1);my @regs=unpack("LLLL",$leaf);printf("%u\n",$regs[ord(substr($ARGV[1],1,1))-ord("a")]);' $1 $2 < /dev/cpu/$cpu/cpuid
 }
 
 # Reads a cpuid register and filters a certain bit
