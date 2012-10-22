@@ -1,0 +1,320 @@
+bash-test-utils -- support writing functional tests
+
+ABOUT
+=====
+
+It provides utility functions and facilities to write tests in
+baremetal and Xen/KVM contexts (host and guest support) and was
+polished to work with i686, x86_64, and ARM under lots of major Linux
+distributions (Debian, Ubuntu, RHEL, SLES, Slackware, Fedora,
+openSUSE).
+
+It can be run as normal bash script or indirectly via the "prove"
+command, a standard Linux tool to run test scripts.
+
+
+SYNOPSIS
+========
+
+A test script
+-------------
+
+  #! /bin/bash
+  . ./bash-test-utils
+  # your_feature_test here
+  done_testing
+
+This imports utility functions to be used by your script, then you
+write your tests, and at the end it calls the actual printing of test
+results.
+
+
+Run it via 'prove' (a standard test utility)
+--------------------------------------------
+
+  $ prove ./trivial-example-1.sh
+  ./trivial-example-1.sh .. ok
+  All tests successful.
+  Files=1, Tests=5, 20 wallclock secs
+  Result: PASS
+
+The tool "prove" is a standard tool available in every Linux
+distribution. It runs the script and prints success statistics. See
+"man prove" for more options.
+
+
+UTILITY FUNCTIONS
+=================
+
+Import utility functions at the beginning of the script via
+
+  . tools/testing/tap/bash-test-utils
+
+Then you have several functions available.
+
+Expressing test results
+-----------------------
+
+* ok ARG1 "some description"
+
+  Evaluates the first argument with Shell boolean semantics (0 is
+  true) and appends a corresponding TAP line. See also "require_ok"
+  below.
+
+* negate_ok ARG1 "some description"
+
+  Evaluates the first argument with Shell inverse boolean semantics (0
+  is false) and appends a corresponding TAP line.
+
+* append_tap "ok - some description"
+
+  Appends a complete TAP line where you have taken care for the
+  "ok"/"not ok" at the beginning.
+
+* append_comment "foo bar baz"
+
+  Appends a complete comment line starting with "#". It appears
+  directly after the last added TAP line so it can be used for
+  diagnostics.
+
+* append_tapdata "key: value"
+
+  Appends a key:value line at the final tapdata YAML block. The key
+  must start with letter and consist of only alphanum an underscore.
+
+
+require_* functions
+-------------------
+
+  All require_* functions check for something and gracefully exit the
+  script if the requirement is not fulfilled. Use this to allow the
+  script to run everywhere without polluting results with false
+  negatives.
+
+* require_ok ARG1 "some description"
+
+  Evaluates the first argument with Shell boolean semantics (0 is
+  true) and appends a corresponding TAP line. If it reports "not ok"
+  the script gracefully exits.
+
+* require_amd_family_range [ MIN [ MAX ] ]
+
+  Ensures vendor is AMD and cpu family from /proc/cpuinfo is in a
+  minimum/maximum range. If you don't specify MIN it defaults to 0. If
+  you don't specify MAX it defaults to MIN.
+
+* require_cpufeature "foo"
+
+  Verifies that the string "foo" occurs in /proc/cpuinfo flags section.
+
+* require_kernel_config "CONFIG_FOO"
+
+  Verify that regex "^CONFIG_FOO=." occurs in /proc/config.gz or
+  /boot/config/$ (uname -r).
+
+* require_program "foo"
+
+  Verify that the program "foo" is available. Use it to declare
+  external programs you call, like "awk", "bc", "perl", etc.
+
+* require_l3cache
+
+  Verify that L3 cache is available (checked in
+  /sys/devices/system/cpu/cpu0/ cache/index3).
+
+* require_root
+
+  Verify that the user executing the script is root (UID 0).
+
+* require_crit_level N
+
+  Verify that the criticality level N of the script is allowed to be
+  run, which is controlled by environment variable CRITICALITY. See
+  "has_crit_level" for meaning of criticality levels.
+
+* require_cpb_disabled
+
+  Enables cpufreq and disables boosting. In case of errors the calling
+  test is skipped.
+
+* require_cpufreq_enabled
+
+  Enables cpufreq and also core boosting. In case of errors the
+  calling test is skipped.
+
+* require_kernel_release_min
+
+  Verify that the current LK release is at least the required version
+  number.
+
+* require_running_in_xen_guest
+
+  Verify if we are in a Xen guest.
+
+* require_running_in_kvm_guest
+
+  Verify if we are in a KVM guest.
+
+* require_running_in_virtualized_guest
+
+  Verify if we are in a virtualized guest (Xen or KVM).
+
+
+request_* functions
+-------------------
+
+All request_* functions try to enable something and if that fails mark it as
+#TODO but continue the test. It's kind of an "uncritical require_*".
+
+* request_cpb_disabled
+
+  Enables cpufreq and disables boosting. The result will be reported
+  and returned. Errors are marked as TODO.
+
+* request_cpufreq_enabled
+
+  Enables cpufreq and also core boosting. The result will be reported
+  and returned. Errors are marked as TODO.
+
+
+Misc auxiliary functions
+------------------------
+
+These are really just utilities to help you but they don't influence the
+behaviour like the require_* functions do.
+
+* has_l3cache
+
+  Returns 0 (shell TRUE) if L3 cache is available (checked in
+  /sys/devices/ system/cpu/cpu0/cache/index3).
+
+* has_cpufeature "foo"
+
+  Returns 0 (shell TRUE) if string "foo" occurs in /proc/cpuinfo flags
+  section.
+
+* has_kernel_release_min
+
+  Returns 0 (shell TRUE) if the current LK release is at least the
+  required version number.
+
+* has_kernel_config "CONFIG_FOO"
+
+  Returns 0 (shell TRUE) if regex "^CONFIG_FOO=." occurs in
+  /proc/config.gz or / boot/config/$(uname -r).
+
+* has_program "foo"
+
+  Return 0 (shell TRUE) if the program "foo" is available.
+
+* has_crit_level N
+
+  Checks whether the criticality level N of the script is allowed to
+  be run, which is controlled by environment variable CRITICALITY. The
+  criticality levels are defined as this:
+
+   * 0: not critical
+   * 1: read sysfs/debugfs/proc files
+   * 2: read HW (MSRs/Northbridge)
+   * 3: write sysfs/debugfs/proc files
+   * 4: write HW (MSRs/Northbridge) or potentially crash the machine
+
+* get_vendor
+
+  Prints vendor "AMD" or "Intel" from /proc/cpuinfo.
+
+* vendor_intel
+
+  Returns 0 (shell TRUE) if vendor is Intel.
+
+* vendor_amd
+
+  Returns 0 (shell TRUE) if vendor is AMD.
+
+* get_random_number [ MAX ]
+
+  Prints a random integer between 0 and MAX (default 32768).
+
+* get_cpu_family
+
+  Print cpu family from /proc/cpuinfo.
+
+* get_cpu_family_hex
+
+  Print cpu family from /proc/cpuinfo in hex syntax (0x...).
+
+* cpu_family_min [ MINFAMILY ]
+
+  Returns 0 (shell TRUE) if cpu family from /proc/cpuinfo is greater
+  or equal to MINFAMILY. Defaults to 0.
+
+* cpu_family_max [ MAXFAMILY ]
+
+  Returns 0 (shell TRUE) if cpu family from /proc/cpuinfo is less or
+  equal to MAXFAMILY. Defaults to 999.
+
+* get_first_file [ LIST OF FILENAMES ]
+
+  Goes through all specified filenames and prints the first one that
+  exists and is readable.
+
+* is_element_in_list WORD "SPACE SEPARATED LIST OF WORDS"
+
+  Returns 0 (shell TRUE) if WORD appears in "SPACE SEPARATED LIST OF
+  WORDS". Remember the usual shell quoting rules.
+
+* get_kernel_release
+
+  Prints the kernel version number from uname -r.
+
+* is_running_in_xen_guest
+
+  Check if we are in a Xen guest.
+
+* is_running_in_kvm_guest
+
+  Check if we are in a KVM guest.
+
+* is_running_in_virtualized_guest
+
+  Check if we are in a virtualized guest (Xen or KVM).
+
+
+INFLUENCING BEHAVIOUR
+=====================
+
+Environment Variables
+---------------------
+
+These variables are expected to be set inside the script to declare
+meta information or influence behaviour:
+
+* TAP[*]                - Array of TAP lines
+* TAPDATA[*]            - Array of YAML lines that contain data in TAP
+* OUTPUT[*]             - Array of additional output lines
+* SUITENAME             - alternative suite name instead of $0
+* SUITEVERSION          - alternative suite version
+* KEYWORDS              - space separated keywords to influence suite
+                          name
+* OSNAME                - alternative OS description
+* CHANGESET             - alternative changeset
+* HOSTNAME              - alternative hostname
+* TICKETURL             - relevant URL in used ticket system
+                          (Bugzilla)
+* WIKIURL               - relevant URL in used wiki
+* PLANNINGID            - relevant task planning id
+                          (MS Project, TaskJuggler, etc.)
+* REQUIRES_GENERATE_TAP - if "1" then require_* functions generate
+                          additional "ok" line on success
+
+
+External environment variables
+------------------------------
+
+These variables are expected to be set from outside of the script to
+influence behaviour:
+
+* EXIT_ON_SKIPALL - if "1" then on skip_all we immediately exit
+                    with exitcode 254.
+* CRITICALITY     - Sets the allowed maximal criticality level.
+                    Scripts with higher level call skip_all().
