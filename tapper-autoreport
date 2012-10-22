@@ -941,7 +941,9 @@ write_msr() (
         return $?
     fi
     [ -w /dev/cpu/$cpu/msr ] || return 2
-    perl -e 'my $value=pack("Q",hex($ARGV[1]));sysseek(STDOUT,hex($ARGV[0]),0);syswrite(STDOUT,$value,8) or exit(1);' $1 $2 > /dev/cpu/$cpu/msr
+    low=$(printf "0x%x" $(($2 & (2**32 - 1))))
+    high=$(printf "0x%x" $((($2 >> 32) & (2**32 - 1))))
+    perl -e 'my $value=pack("LL",hex($ARGV[1]),hex($ARGV[2]));sysseek(STDOUT,hex($ARGV[0]),0);syswrite(STDOUT,$value,8) or exit(1);' $1 $low $high > /dev/cpu/$cpu/msr
 )
 
 # Reads an entire cpuid register
