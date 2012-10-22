@@ -154,6 +154,8 @@ Then you have several functions available.
 Evaluates the first argument with Shell boolean semantics (0 is true)
 and appends a corresponding TAP line.
 
+See also "require_ok" below.
+
 #### negate_ok ARG1 "some description"
 
 Evaluates the first argument with Shell inverse boolean semantics (0
@@ -164,9 +166,14 @@ is false) and appends a corresponding TAP line.
 Appends a complete TAP line where you have taken care for the
 "ok"/"not ok" at the beginning.
 
+#### append_comment "foo bar baz"
+
+Appends a complete comment line starting with "#". It appears directly
+after the last added TAP line so it can be used for diagnostics.
+
 #### append_tapdata "key: value"
 
-Appends a key:value line at the tapdata YAML block. The key must
+Appends a key:value line at the final tapdata YAML block. The key must
 start with letter and consist of only alphanum an underscore.
 
 ### require_* functions
@@ -175,6 +182,14 @@ All `require_*` functions check for something and **gracefully exit**
 the script if the requirement is not fulfilled. Use this to
 allow the script to run everywhere without polluting results with
 false negatives.
+
+#### require_ok ARG1 "some description"
+
+Evaluates the first argument with Shell boolean semantics (0 is true)
+and appends a corresponding TAP line.
+
+If it reports "not ok" the script gracefully exits.
+
 
 #### require_amd_family_range [ MIN [ MAX ] ]
 
@@ -211,6 +226,21 @@ Verify that a variant of `netcat` (netcat, nc) is available.
 
 Verify that the user executing the script is root (UID 0).
 
+#### require_crit_level N
+
+Verify that the criticality level N of the script is allowed to be
+run, which is controlled by environment variable CRITICALITY. See
+"has_crit_level" for meaning of criticality levels.
+
+#### require_cpb_disabled
+
+Enables cpufreq and disables boosting. In case of errors the calling
+test is skipped.
+
+#### require_cpufreq_enabled
+
+Enables cpufreq and also core boosting. In case of errors the calling
+test is skipped.
 
 #### require_kernel_release_min_1
 
@@ -229,6 +259,37 @@ version number.
 Verify that the current LK release is less than required 3rd level
 version number.
 
+#### require_running_in_xen_guest
+
+Verify if we are in a Xen guest.
+
+#### require_running_in_kvm_guest
+
+Verify if we are in a KVM guest.
+
+#### require_running_in_virtualized_guest
+
+Verify if we are in a virtualized guest (Xen or KVM).
+
+#### require_running_in_tapper_guest
+
+Verify if we are in a Tapper automation guest environment.
+
+### request_* functions
+
+All `request_*` functions try to enable something and if that fails
+mark it as #TODO but continue the test. It's kind of an "uncritical
+require_*".
+
+#### request_cpb_disabled
+
+Enables cpufreq and disables boosting. The result will be reported and
+returned. Errors are marked as TODO.
+
+#### request_cpufreq_enabled
+
+Enables cpufreq and also core boosting. The result will be reported
+and returned. Errors are marked as TODO.
 
 ### Misc auxiliary functions
 
@@ -254,6 +315,19 @@ Returns 0 (shell TRUE) if regex "^CONFIG_FOO=." occurs in
 
 Return 0 (shell TRUE) if the program "foo" is available.
 
+#### has_crit_level N
+
+Checks whether the criticality level N of the script is allowed to be
+run, which is controlled by environment variable CRITICALITY.
+
+The criticality levels are defined as this:
+
+* 0: not critical
+* 1: read sysfs/debugfs/proc files
+* 2: read HW (MSRs/Northbridge)
+* 3: write sysfs/debugfs/proc files
+* 4: write HW (MSRs/Northbridge) or potentially crash the machine
+
 #### get_vendor
 
 Prints vendor "AMD" or "Intel" from `/proc/cpuinfo`.
@@ -273,6 +347,10 @@ Prints a random integer between 0 and MAX (default 32768).
 #### get_cpu_family
 
 Print cpu family from `/proc/cpuinfo`.
+
+#### get_cpu_family_hex
+
+Print cpu family from /proc/cpuinfo in hex syntax (0x...).
 
 #### cpu_family_min [ MINFAMILY ]
 
@@ -306,6 +384,21 @@ Prints the 2nd part of the kernel version number from uname -r.
 
 Prints the 3rd part of the kernel version number from uname -r.
 
+#### is_running_in_xen_guest
+
+Check if we are in a Xen guest.
+
+#### is_running_in_kvm_guest
+
+Check if we are in a KVM guest.
+
+#### is_running_in_virtualized_guest
+
+Check if we are in a virtualized guest (Xen or KVM).
+
+#### is_running_in_tapper_guest
+
+Check if we are in a Tapper automation guest environment.
 
 ## INFLUENCING BEHAVIOUR
 
@@ -317,6 +410,9 @@ You can
 
 ### Environment Variables
 
+These variables are expected to be set inside the script to declare
+meta information or influence behaviour:
+
 * `TAP[*]`                - Array of TAP lines
 * `TAPDATA[*]`            - Array of YAML lines that contain data in TAP
 * `HEADERS[*]`            - Array of Tapper headers
@@ -327,7 +423,6 @@ You can
 * `OSNAME`                - alternative OS description
 * `CHANGESET`             - alternative changeset
 * `HOSTNAME`              - alternative hostname
-* `TAPPER_REPORT_SERVER`  - alternative report server
 * `TICKETURL`             - relevant URL in used ticket system (Bugzilla)
 * `WIKIURL`               - relevant URL in used wiki
 * `PLANNINGID`            - relevant task planning id (MS Project, TaskJuggler)
@@ -335,6 +430,14 @@ You can
 * `NOUPLOAD`              - if "1" no uploading of default files happens
 * `REQUIRES_GENERATE_TAP` - if "1" then require_* functions generate additional "ok" line on success
 
+#### External environment variables
+
+These variables are expected to be set from outside of the script to
+influence behaviour:
+
+* `EXIT_ON_SKIPALL`       - if "1" then on skip_all we immediately exit with 254 and do not send a report
+* `CRITICALITY`           - Sets the allowed maximal criticality level. Scripts with higher level do skip_all
+* `TAPPER_REPORT_SERVER`  - alternative report server
 
 ### Command Line Arguments
 
