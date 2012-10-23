@@ -4,6 +4,7 @@
 
 . ./bash-test-utils
 
+require_crit_level 3
 require_root
 require_file /sys/devices/system/cpu/cpu1/online "at least one CPU can be toggled on/off"
 require_program netcat

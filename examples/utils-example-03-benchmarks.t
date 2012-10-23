@@ -9,7 +9,7 @@ bogomips=$(echo $(cat /proc/cpuinfo | grep -i bogomips | head -1 | cut -d: -f2))
 
 # simple yaml here, indent level2 by yourself:
 append_tapdata "benchmarks:"
-append_tapdata "  bogomips: $bogomips"
+append_tapdata "  bogomips: ${bogomips:-0.0}"
 append_tapdata "  sleeptime: $sleeptime"
 append_tapdata "  settings_1:"
 append_tapdata "    used_options: -foo -bar affe/zomtec.dat"

@@ -50,6 +50,7 @@ do_md5sum_zeroes() {
 # ==================== REQUIREMENTS ====================
 
 require_root
+require_crit_level 3 # toggle CPB
 if ! has_cpufeature cpb &&  ! has_cpufeature ida ; then
 	autoreport_skip_all "CPU does not support boosting"
 else
