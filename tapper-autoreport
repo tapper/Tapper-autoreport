@@ -1783,8 +1783,14 @@ autoreport_start () {
             reportid=$(echo $output | sed -e 's/^.*::Reports::Receiver. Protocol is TAP. Your report id: //')
             if [ ! "x1" = "x$NOSEND" ] ; then
                 echo -n "# http://$TAPPER_REPORT_SERVER" 1>&2
-                if echo $TAPPER_REPORT_SERVER | grep -q "bascha" ; then
+                if [ -n "$TAPPER_WEB_PORT" ] ; then
+                    echo -n ":$TAPPER_WEB_PORT"
+                elif echo $TAPPER_REPORT_SERVER | grep -q "localhost" ; then
+                    # heuristically localhost is running a development server
                     echo -n ":3000"
+                else
+                    # be explicit
+                    echo -n ":80"
                 fi
                 if echo $TAPPER_REPORT_SERVER | grep -q "artemis" ; then
                     echo "/artemis/reports/id/$reportid" 1>&2
