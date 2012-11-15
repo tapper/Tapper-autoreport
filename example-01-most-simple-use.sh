@@ -1,3 +1,3 @@
 #! /bin/bash
 
-./tapper-autoreport
+. ./tapper-autoreport
