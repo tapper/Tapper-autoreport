@@ -18,7 +18,7 @@ point to write actual **function tests* that are reusable.
 
 It collects meta information from system, reports test results and can
 upload logs and other files over network to a
-[Tapper server](http://github.com/amd/Tapper-Reports-Receiver).
+[Tapper server](http://github.com/tapper/Tapper-Reports-Receiver).
 
 ## SYNOPSIS
 

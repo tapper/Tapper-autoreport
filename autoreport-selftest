@@ -47,7 +47,7 @@ main_after_hook ()
 }
 
 TICKETURL='https://rt.cpan.org/Ticket/Display.html?id=67058'
-WIKIURL=https://github.com/amd/Tapper/wiki
+WIKIURL=https://github.com/tapper/Tapper/wiki
 PLANNINGID=some.task.hierarchy.tapper.tapper3
 
 REPORTGROUP=selftest-$(date +%Y-%m-%d | md5sum | cut -d" " -f1)

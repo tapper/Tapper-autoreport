@@ -1552,7 +1552,7 @@ tapper_help () {
     echo "tapper-autoreport"
     echo ""
     echo "For more info please see"
-    echo "  https://github.com/amd/Tapper-autoreport/blob/master/autoreport-manual.md"
+    echo "  https://github.com/tapper/Tapper-autoreport/blob/master/autoreport-manual.md"
     echo ""
 }
 
