@@ -1768,8 +1768,9 @@ autoreport_start () {
         # does it provide -q option
         if $NETCAT -h 2>&1 |grep -q -- '-q.*quit' ; then
             NETCAT="$NETCAT -q7"
+        else
+            NETCAT="$NETCAT -w7"
         fi
-        NETCAT="$NETCAT -w7"
     else
         NETCAT=cat
     fi
