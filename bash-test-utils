@@ -1007,7 +1007,10 @@ append_comment () {
 }
 
 diag () {
-    append_comment "${@}"
+    while read line
+    do
+        append_comment "$line"
+    done <<< "${@}"
 }
 
 is () {
