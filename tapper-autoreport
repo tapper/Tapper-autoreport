@@ -1078,7 +1078,10 @@ append_comment () {
 }
 
 diag () {
-    append_comment "${@}"
+    while read line
+    do
+        append_comment "$line"
+    done <<< "${@}"
 }
 
 is () {
@@ -1721,7 +1724,7 @@ autoreport_main() {
 
     # ==================== remaining TAP ====================
     for l in $(seq 0 $(($COUNT - 1))) ; do
-        echo ${TAP[l]}
+        echo "${TAP[l]}"
     done
 
     # ==================== additional TAP/YAML data ====================
