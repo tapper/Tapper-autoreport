@@ -30,6 +30,12 @@
 _SUCCESS=0
 _FAILURE=1
 
+run_hook () {
+    _hook=${1:-UNDEFINED}
+    _TA_INC="bash-test-utils.hooks/$TESTUTIL_HOOKS/$_hook"
+    if [ -e "$_TA_INC" ] ; then . $_TA_INC ; fi
+}
+
 # gets vendor "AMD" or "Intel" from /proc/cpuinfo
 get_vendor () {
     vendor=$(echo $(grep vendor_id /proc/cpuinfo |head -1|cut -d: -f2|sed -e "s/Genuine\|Authentic//"))
