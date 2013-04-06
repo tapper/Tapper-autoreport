@@ -447,9 +447,9 @@ influence behaviour:
 * [filename]              - upload the file
 
 
-### Function Hooks
+### Function hooks
 
-#### main_after_hook ()
+#### function main_end_hook()
 
 * optional shell function to be executed at the end of autoreport's main()
 * all stdout will be part of the report

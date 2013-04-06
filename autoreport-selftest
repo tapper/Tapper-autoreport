@@ -38,7 +38,7 @@ TAPDATA[4]="cpu_family_hex: $(get_cpu_family_hex)"
 TAPDATA[5]="cpu_family_dec: $(get_cpu_family)"
 append_tapdata "number_of_tap_reports: $(get_tap_counter)"
 
-main_after_hook ()
+main_end_hook ()
 {
     valuex=17
     echo "# I am comment."

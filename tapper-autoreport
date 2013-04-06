@@ -1755,8 +1755,8 @@ autoreport_main() {
         echo "# File upload: '${FILES[f]}'"
     done
 
-    if set | grep -q '^main_after_hook \(\)' ; then
-        main_after_hook
+    if set | grep -q '^main_end_hook \(\)' ; then
+        main_end_hook
     fi
 }
 
