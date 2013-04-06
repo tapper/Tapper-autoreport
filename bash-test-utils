@@ -79,6 +79,7 @@ arm_cpu () {
 get_cpu_stepping () {
     echo $(echo $(grep "^stepping" /proc/cpuinfo |head -1|cut -d: -f2))
 }
+
 # outputs cpu model from /proc/cpuinfo
 get_cpu_model () {
     echo $(echo $(grep "^model[^ ]" /proc/cpuinfo |head -1|cut -d: -f2))
@@ -244,7 +245,7 @@ require_x86_64 () {
 }
 
 # scan all PCI devices for one with XenSource's PCI-ID
-has_xen_pci_device() {
+has_xen_pci_device () {
     # try lspci (not in PATH if not root)
     _ta_xen_LSPCI=$(which lspci 2> /dev/null) || _ta_xen_LSPCI=/sbin/lspci
     if [ -x "$_ta_xen_LSPCI" ]
@@ -352,11 +353,11 @@ has_kvm_guests () {
     fi
 }
 
-get_xen_tool() {
+get_xen_tool () {
     which xl 2> /dev/null || which xm 2> /dev/null
 }
 
-get_number_xen_guests() {
+get_number_xen_guests () {
     XL=$(get_xen_tool) || return $_FAILURE
     res=$($XL list | wc -l)
     if [ -n "$res" -a "$res" -ge 2 ] ; then
@@ -638,7 +639,7 @@ request_cpb_disabled () {
 #   require_ok $? "disable CPB"
 # or: just try to disable it, but don't care if we fail
 #   disable_cpb > /dev/null
-disable_cpb() {
+disable_cpb () {
     # check whether the CPB sysfs knob is there
     if [ ! -r /sys/devices/system/cpu/cpu0/cpufreq/cpb ] ; then
         is_running_in_virtualized_guest && _cpbhint=" (running virtualized)"
@@ -885,7 +886,7 @@ write_msr() (
 # Example: get_cpuid_register 0x80000001 ecx
 # Outputs the decimal register value to stdout
 # Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
-get_cpuid_register() {
+get_cpuid_register () {
     [ $# -lt 2 ] && return 3
     cpu=${3:-0}
 
@@ -901,7 +902,7 @@ get_cpuid_register() {
 # Example: get_cpuid_bit 0x80000001 ecx 2
 # Outputs either 0 or 1 to stdout
 # Returns 0 for success, 1 for invalid cpuid leaf, 2 for permission
-get_cpuid_bit() {
+get_cpuid_bit () {
     [ $# -lt 3 ] && return 3
     cpu=${4:-0}
     reg=$(get_cpuid_register $1 $2 $4) || return $?
@@ -1090,7 +1091,7 @@ negate_ok () {
     return $success
 }
 
-get_hex_from_int() { # returns lower case
+get_hex_from_int () { # returns lower case
     printf "%x\n" "$1"
 }
 
@@ -1371,11 +1372,12 @@ ltu_version () {
 # ===== param evaluation ==============================
 
 prepare_start () {
+
     prepare_information
     # other context sensitive initialization (eg. default, destructive, ...)
 }
 
-prepare_plan() {
+prepare_plan () {
     # count of our own tests
     COUNT=${#TAP[@]}
     PLAN=$(($MYPLAN + $COUNT - $COMMENTCOUNTER))
