@@ -406,7 +406,7 @@ You can
 
 * use environment variables to provide more content
 * provide commandline params that "Do What I Mean"
-* define hooks (functions) to be called
+* define hooks (functions and files) to be called
 
 ### Environment Variables
 
@@ -449,9 +449,12 @@ influence behaviour:
 
 ### Function hooks
 
+These are optional shell functions that you can define in your test
+script and that will be called in certain places.
+
 #### function main_end_hook()
 
-* optional shell function to be executed at the end of autoreport's main()
+* executed at the end of autoreport's main()
 * all stdout will be part of the report
 
 ## RESULT URLS
