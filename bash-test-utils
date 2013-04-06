@@ -1413,6 +1413,13 @@ prepare_start () {
 
     prepare_information
     # other context sensitive initialization (eg. default, destructive, ...)
+
+    # public
+    TESTRESULTSFILE=${TESTRESULTSFILE:-testresults.tgz}
+
+    # private
+    _TAPFILE=${_TAPFILE:-tests.tap}
+    _UPLOADSFILE=${_UPLOADSFILE:-files.tgz}
 }
 
 prepare_plan () {
@@ -1502,12 +1509,61 @@ autoreport_main () {
     fi
 }
 
+upload_file () {
+    _ta_upload_file="${1:-0}"
+    _LTU_FILES[$_LTU_FILECOUNT]="$_ta_upload_file"
+    let _LTU_FILECOUNT=_LTU_FILECOUNT+1
+}
+
 # ===== main =========================================
 
 autoreport_start () {
 
     prepare_start "${@}"
     autoreport_main
+}
+
+done_testing_to_file () {
+    prepare_start "${@}"
+
+    _LTU_MYTMP=$(mktemp -d)
+    _LTU_COPY_TMP=$(mktemp -d)
+
+    MYTAPFILE="$_LTU_MYTMP/$_TAPFILE"
+    MYUPLOADSFILE="$_LTU_MYTMP/$_UPLOADSFILE"
+
+    autoreport_main > $MYTAPFILE
+
+    # ==================== files ====================
+    # paranoid whitespace-aware tar
+    if [ $_LTU_FILECOUNT -gt 0 ] ; then
+        eval tar -P -czf "'$MYUPLOADSFILE'" $(
+            for f in $(seq 0 $(($_LTU_FILECOUNT - 1))) ; do
+                _LTU_FILE="${_LTU_FILES[f]}"
+                if [ -e "$_LTU_FILE" ] ; then
+                    # handle /proc and /sys files by reading their content into intermediate file
+                    if echo $_LTU_FILE | grep -qE '^\/(proc|sys)\/' > /dev/null 2>&1 ; then
+                        _LTU_FILE_COPY="$_LTU_COPY_TMP/$(echo $_LTU_FILE | sed -e 's/\W/_/g')"
+                        cat $_LTU_FILE > "$_LTU_FILE_COPY" 2>&1
+                        _LTU_FILE="$_LTU_FILE_COPY"
+                    fi
+                    echo "# Upload file: '$_LTU_FILE'" >> $MYTAPFILE
+                    echo "'$_LTU_FILE'"
+                else
+                    echo "# Ignore file: '$_LTU_FILE' (not existing)" >> $MYTAPFILE
+                fi
+            done
+        )
+    fi
+
+    _MAYBE_UPLOADSFILE="$_UPLOADSFILE"
+    if [ ! -e $MYUPLOADSFILE ] ; then
+        _MAYBE_UPLOADSFILE=""
+    fi
+    tar -C $_LTU_MYTMP -czf "$TESTRESULTSFILE" "$_TAPFILE" $_MAYBE_UPLOADSFILE
+
+    rm -fr "$_LTU_MYTMP"
+    rm -fr "$_LTU_COPY_TMP"
 }
 
 done_testing () {
