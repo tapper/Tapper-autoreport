@@ -1654,7 +1654,7 @@ upload_files() {
     for f in $(seq 0 $(($FILECOUNT - 1))) ; do
         file="${FILES[f]}"
         filetype=""
-        if echo $file | grep -Eq '\.(gz|bz2)$' ; then
+        if echo $file | grep -Eq '(gz|bz2)$' ; then
             filetype="application/octet-stream"
         fi
         echo -n "# - upload $file" 1>&2
