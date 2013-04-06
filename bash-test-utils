@@ -1474,6 +1474,11 @@ autoreport_main () {
     # ==================== remaining TAP ====================
     for l in $(seq 0 $(($COUNT - 1))) ; do
         echo "${TAP[l]}"
+        if echo "${TAP[l]}" | grep -q '^not ok ' ; then
+            if [ "$_LTU_EXITCODE" -lt 253 ] ; then # avoid overflow; and 254 means SKIPALL
+                let _LTU_EXITCODE++
+            fi
+        fi
     done
 
     # ==================== additional TAP/YAML data ====================
@@ -1582,6 +1587,9 @@ done_testing () {
 function recover_kill {
     ok 1 'GOT KILLED EXTERNALLY'
     done_testing
+    if [ "x$PROVIDE_EXITCODE" = "x1" ] ; then
+        exit $_LTU_EXITCODE
+    fi
     exit
 }
 
