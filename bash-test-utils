@@ -977,8 +977,13 @@ get_cpus_from_cpulist () {
 autoreport_skip_all () {
     explanation="${1:-'no explanation'}"
     SKIPALL="1..0 # skip $explanation"
-    autoreport_start
-    exit 0
+    NOUPLOAD=1
+    if [[ -n $EXIT_ON_SKIPALL ]]; then
+        exit 254
+    else
+        autoreport_start
+        exit 0
+    fi
 }
 
 # ==================== TAP utils ====================
