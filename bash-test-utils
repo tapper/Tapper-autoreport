@@ -1582,6 +1582,8 @@ done_testing () {
     fi
 }
 
+run_hook "functions"
+
 # =====================================================
 
 function recover_kill {
