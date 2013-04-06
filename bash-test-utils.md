@@ -292,6 +292,11 @@ Check if we are in a KVM guest.
 
 Check if we are in a virtualized guest (Xen or KVM).
 
+#### upload_file
+
+Mark a file for upload which in fact makes it part of the results.tgz
+file if `CREATE_RESULTS_FILE` is set to 1.
+
 ## INFLUENCING BEHAVIOUR
 
 You can
@@ -317,7 +322,18 @@ meta information or influence behaviour:
 * `TICKETURL`             - relevant URL in used ticket system (Bugzilla)
 * `WIKIURL`               - relevant URL in used wiki
 * `PLANNINGID`            - relevant task planning id (MS Project, TaskJuggler)
-* `REQUIRES_GENERATE_TAP` - if "1" then require_* functions generate additional "ok" line on success
+* `REQUIRES_GENERATE_TAP` - if "1" then require_* functions generate
+                            additional "ok" line on success
+* `PROVIDE_EXITCODE`      - test_done() will return with exitcode set to
+                            number of failed tests (max 253).
+* `CREATE_RESULTS_FILE`   - Create a .tgz of all results instead of
+                            printing to STDOUT. The tgz contains a file
+                            with the TAP output and a file containing
+                            all files collected with upload_file()
+                            inside the test script.
+* `TESTRESULTSFILE`       - The name of the .tgz file to be created on
+                            `CREATE_RESULTS_FILE`. Defaults to
+                            `testresults.tgz`.
 
 #### External environment variables
 
@@ -327,9 +343,49 @@ influence behaviour:
 * `EXIT_ON_SKIPALL`       - if "1" then on skip_all we immediately exit with 254 and do not send a report
 * `CRITICALITY`           - Sets the allowed maximal criticality level. Scripts with higher level do skip_all
 
-### Command Line Arguments
+### Function hooks
 
-* `--version`             - print version number and exit
-* `nok`                   - declare something was not ok
-* [integer]               - exit code of a program, 0 == ok, else not (Hint: use '$?' to refer to last program)
-* [filename]              - upload the file
+These are optional shell functions that you can define in your test
+script and that will be called in certain places.
+
+#### function main_end_hook()
+
+* executed at the end of autoreport's main()
+* all stdout will be part of the report
+
+### Include hooks
+
+You can have a directory `bash-test-utils.hooks/FOO/` (where the first
+part is fix, but `FOO` is yours) to extend bash-test-utils with
+personal behaviour behaviour. This subdir is completely optional. Feel
+free to write your own extensions and ask for more hooks.
+
+Activate the hooks by setting the hooks subdirectory before including
+the bash-test-utils:
+
+```bash
+ export TESTUTIL_HOOKS=FOO
+ . ./bash-test-utils
+```
+
+This will then look into `./bash-test-utils.hooks/FOO/*` files and
+include (`source`) them if existing.
+
+The files are named after the place where they are called. See the
+example `./bash-test-utils.hooks/tapper/*` which adds Tapper specific
+behaviour to bash-test-utils. Following hooks can be used:
+
+#### file 'functions'
+
+Included after all functions are declared. Use it to declare
+additional functions or patch existing ones.
+
+#### file 'prepare_information'
+
+Included at the end of the prepare_information() function. Use it to
+gather additional meta information.
+
+#### file 'suite_meta'
+
+Included at the end of suite_meta() function. Use it to print out
+additional meta information.
