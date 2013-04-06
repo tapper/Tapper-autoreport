@@ -22,7 +22,6 @@ MOREINFOURL=https://github.com/tapper/Tapper-autoreport/blob/master/bash-test-ut
 # cpufeatures are looked up in /proc/cpuinfo::flags.
 
 # the require_* functions stop the script in a controlled way
-require_vendor_amd
 require_cpufeature "msr"
 require_cpufeature "fpu"
 # require_amd_family_range 0xf 0x12
@@ -30,16 +29,15 @@ require_cpufeature "fpu"
 # require_amd_family_range 0x10
 
 # store success in variables and make complex tests
+YAY=1
 if grep -q AMD /proc/cpuinfo ; then
     if grep -q sse2 /proc/cpuinfo ; then
         YAY=0
-    else
-        YAY=1
     fi
 fi
 # ok() evaluates arg 1 with exit code shell boolean semantics
 # and creates TAP
-ok $YAY "looks like AMD and SSE2"
+ok $YAY "looks like AMD and SSE2 # TODO no strong opinion on vendor"
 
 # negate_ok() reverses the success semantics of ok()
 grep -q zomtec /proc/cpuinfo
