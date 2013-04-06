@@ -1193,7 +1193,13 @@ require_kernel_release_min () {
     fi
 }
 
-prepare_information() {
+# This function is guaranteed (by contract) to be called ONLY during include
+initialize_variables_once () {
+    _LTU_EXITCODE=0
+    _LTU_FILECOUNT=0
+}
+
+prepare_information () {
 
     # ===== control variables defaults ==================
 
@@ -1498,4 +1504,5 @@ trap "recover_kill" SIGTERM SIGHUP SIGINT SIGKILL
 
 # =====================================================
 
+initialize_variables_once
 prepare_information
