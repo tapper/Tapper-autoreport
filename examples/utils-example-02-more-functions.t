@@ -8,11 +8,16 @@
 #
 # Run it with:
 #
-#   $ prove -v ./examples/utils-example-02.t
+#   $ prove -v ./examples/utils-example-02-more-functions.t
 #
 ############################################################
 
 . ./bash-test-utils
+
+TICKETURL=https://github.com/tapper/Tapper-autoreport/issues/1
+WIKIURL=https://github.com/tapper/Tapper/wiki
+PLANNINGURL=https://github.com/tapper/Tapper-autoreport/pull/2
+MOREINFOURL=https://github.com/tapper/Tapper-autoreport/blob/master/bash-test-utils.md
 
 # cpufeatures are looked up in /proc/cpuinfo::flags.
 
