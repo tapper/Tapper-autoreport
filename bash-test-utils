@@ -1358,7 +1358,7 @@ ltu_kvm_meta () {
     echo "# Test-kvm-base-os-description: $(ltu_base_os_description)"
 }
 
-ltu_section_meta() {
+ltu_section_meta () {
     if [ ! "x1" = "x$DONTREPEATMETA" ] ; then
         echo "# Test-uname: $uname"
         echo "# Test-osname: $osname"
@@ -1423,7 +1423,7 @@ prepare_plan () {
 
 # ===== main =========================================
 
-autoreport_main() {
+autoreport_main () {
 
     COMMENTCOUNTER=${COMMENTCOUNTER:-0}
 
