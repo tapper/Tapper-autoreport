@@ -1,0 +1,32 @@
+This is an example hooks directory to extend bash-test-utils with some
+Tapper behaviour, similar to what tapper-autoreport provides. This
+subdir is completely optional. Feel free to write your own extensions
+and ask for more hooks.
+
+Activate the hooks by setting the hooks subdirectory before including
+the bash-test-utils:
+
+  export TESTUTIL_HOOKS=tapper
+  . ./bash-test-utils
+
+This will then look into ./bash-test-utils.hooks/tapper/* files and
+include them if existing.
+
+The files are named after the place where they are called. Following
+hooks can be used:
+
+ * functions
+
+     Included after all functions are declared. Use it to declare
+     additional functions or patch existing ones.
+
+
+ * prepare_information
+
+     Included at the end of the prepare_information() function. Use it
+     to gather additional meta information.
+
+ * suite_meta
+
+     Included at the end of suite_meta() function. Use it to print out
+     additional meta information.

@@ -1,0 +1,55 @@
+#! /bin/bash
+
+# prepare_function() {
+    # combined machine name in Tapper automation guest environment
+    if is_running_in_virtualized_guest ; then
+        if [ "x$TAPPER_HOSTNAME" != "x" ] ; then
+            hostname="${TAPPER_HOSTNAME}:$hostname"
+        elif [ -r /etc/tapper ] ; then
+            TAPPER_HOSTNAME=$(echo $(grep hostname: /etc/tapper | cut -d: -f2))
+            hostname="${TAPPER_HOSTNAME}:$hostname"
+        fi
+    fi
+    reportername=${REPORTERNAME:-$USER}
+
+    ticketurl=${TICKETURL:-""}
+    wikiurl=${WIKIURL:-""}
+    planningid=${PLANNINGID:-""}
+    moreinfourl=${MOREINFOURL:-""}
+
+    # group reports with similar environment:
+    # - hostname
+    # - date
+    # - uname
+    # - cpuinfo
+    # - kernel config
+    TESTRUN_FROM_CONFIG=""
+    if [ -r /test.config ] ; then
+        TESTRUN_FROM_CONFIG=$(grep -E '^test_run:' /test.config | cut -d: -f2)
+    fi
+    reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-${TESTRUN_FROM_CONFIG:-}}}
+    reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+
+    if [ ! "$reportgroup_testrun" ] ; then
+        reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
+    fi
+
+    # group reports with similar environment:
+    # - hostname
+    # - date
+    # - uname
+    # - cpuinfo
+    # - kernel config
+    TESTRUN_FROM_CONFIG=""
+    if [ -r /test.config ] ; then
+        TESTRUN_FROM_CONFIG=$(grep -E '^test_run:' /test.config | cut -d: -f2)
+    fi
+    reportgroup_testrun=${TAPPER_TESTRUN:-${ARTEMIS_TESTRUN:-${TESTRUN_FROM_CONFIG:-}}}
+    reportgroup=${REPORTGROUP:-$((echo $HOSTNAME ; date +%Y-%m-%d ; uname -a ; cat /proc/cpuinfo | grep -v MHz | grep -vi bogomips ; cat $(ls -1 $BOOTCONFIG $PROCCONFIG /dev/null 2> /dev/null | sort) ) | md5sum | cut -d" " -f1 )}
+
+    if [ ! "$reportgroup_testrun" ] ; then
+        reportgroup_arbitrary=${TAPPER_REPORT_GROUP:-$reportgroup}
+    fi
+
+# } # prepare_function
+

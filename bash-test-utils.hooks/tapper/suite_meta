@@ -1,0 +1,11 @@
+#! /bin/bash
+
+# suite_meta () {
+    if [ -n "$reportgroup_arbitrary" ] ; then
+        echo "# Test-reportgroup-arbitrary:    $reportgroup_arbitrary";
+    fi
+    if [ -n "$reportgroup_testrun" ] ; then
+        echo "# Test-reportgroup-testrun:      $reportgroup_testrun";
+    fi
+
+# } # suite_meta

@@ -1,0 +1,52 @@
+#! /bin/bash
+
+# check for Tapper automation guest environment
+is_running_in_tapper_guest () {
+    SUCC=1
+    if [ -n "$TAPPER_GUESTNUMBER" ] ; then
+        if [ $TAPPER_GUESTNUMBER -gt 0 ] ; then
+            SUCC=0
+        fi
+    fi
+    return $SUCC
+}
+
+# stops testscript if we aren't a Tapper automation guest environment
+require_running_in_tapper_guest () {
+    explanation="${1:-Needs to run in Tapper guest}"
+    if is_running_in_tapper_guest ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_running_in_tapper_guest" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if netcat not available
+require_netcat () {
+    explanation="${2:-Missing program netcat}"
+    if has_program "netcat" ; then
+        return $_SUCCESS
+    elif has_program "nc" ; then
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+tapper_read_config_key () {
+    key="${1:-test_run}"
+
+    echo $(grep -E "^ *$key: " /etc/tapper |cut -d: -f2)
+}
+
+tapper_output_dir () {
+    echo "$(tapper_read_config_key output_dir)/$(tapper_read_config_key test_run)" | sed -e 's/\/\+/\//g'
+}
+
+tapper_all_meta () {
+    prepare_information
+    tapper_suite_meta
+    tapper_section_meta
+}
+
