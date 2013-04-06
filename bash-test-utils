@@ -1513,7 +1513,11 @@ upload_file () {
 # ===== main =========================================
 
 autoreport_start () {
+    prepare_start "${@}"
+    autoreport_main
+}
 
+done_testing_to_stdout () {
     prepare_start "${@}"
     autoreport_main
 }
@@ -1562,7 +1566,15 @@ done_testing_to_file () {
 }
 
 done_testing () {
-    autoreport_start "${@}"
+    if [ "x$CREATE_RESULTS_FILE" = "x1" ] ; then
+        done_testing_to_file "${@}"
+    else
+        done_testing_to_stdout "${@}"
+    fi
+
+    if [ "x$PROVIDE_EXITCODE" = "x1" ] ; then
+        return $_LTU_EXITCODE
+    fi
 }
 
 # =====================================================
