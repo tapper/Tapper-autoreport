@@ -1261,7 +1261,7 @@ prepare_information () {
 
 } # prepare_information()
 
-ltu_suite_meta() {
+suite_meta () {
     if [[ -n $VERBOSE ]]; then
         echo "# Test-section: $suite_name";
         echo "# Test-suite-version: $suite_version";
@@ -1402,7 +1402,7 @@ autoreport_main() {
 
     if [ -n "$SKIPALL" ] ; then
         echo "$SKIPALL"
-        ltu_suite_meta
+        suite_meta
         if [[ -n $VERBOSE ]]; then
             ltu_section_meta
         fi
@@ -1418,7 +1418,7 @@ autoreport_main() {
     echo "1..$PLAN"
 
     # ==================== meta info ====================
-    ltu_suite_meta
+    suite_meta
     if [[ -n $VERBOSE ]]; then
         ltu_section_meta
     fi
