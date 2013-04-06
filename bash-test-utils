@@ -1265,6 +1265,12 @@ prepare_information () {
     fi
     PROCCONFIG="/proc/config.gz"
 
+    ticketurl=${TICKETURL:-""}
+    wikiurl=${WIKIURL:-""}
+    planningid=${PLANNINGID:-""}
+    moreinfourl=${MOREINFOURL:-""}
+
+    run_hook "prepare_information"
 } # prepare_information()
 
 suite_meta () {
@@ -1274,6 +1280,21 @@ suite_meta () {
     fi
     echo "# Test-suite-name: $suite_name";
     echo "# Test-machine-name: $hostname";
+
+    if [ -n "$ticketurl" ] ; then
+        echo "# Test-ticket-url:               $ticketurl";
+    fi
+    if [ -n "$wikiurl" ] ; then
+        echo "# Test-wiki-url:                 $wikiurl";
+    fi
+    if [ -n "$planningid" ] ; then
+        echo "# Test-planning-id:              $planningid";
+    fi
+    if [ -n "$moreinfourl" ] ; then
+        echo "# Test-moreinfo-url:             $moreinfourl";
+    fi
+
+    run_hook "suite_meta"
 }
 
 ltu_base_os_description () {
