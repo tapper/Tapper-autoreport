@@ -1499,13 +1499,8 @@ autoreport_main () {
         echo ${OUTPUT[l]}
     done
 
-    # ==================== files ====================
-    for f in $(seq 0 $(($FILECOUNT - 1))) ; do
-        echo "# File upload: '${FILES[f]}'"
-    done
-
-    if set | grep -q '^main_after_hook \(\)' ; then
-        main_after_hook
+    if set | grep -q '^main_end_hook \(\)' ; then
+        main_end_hook
     fi
 }
 
