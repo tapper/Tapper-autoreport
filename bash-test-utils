@@ -1221,7 +1221,7 @@ prepare_information () {
     myname=$(echo $(basename -- $0 | sed -e 's/\.\w*$//i'))
 
     SUITE=${myname:-bash-test-utils}
-    VERSION=1.000
+    VERSION=2.000
 
     # ===== other meta info ==================
 
