@@ -1531,7 +1531,7 @@ done_testing_to_file () {
     prepare_start "${@}"
 
     _LTU_MYTMP=$(mktemp -d)
-    _LTU_COPY_TMP=$(mktemp -d)
+    _LTU_COPY_TMP=$(mktemp -d --tmpdir "SPECIALFILES.XXX")
 
     MYTAPFILE="$_LTU_MYTMP/$_TAPFILE"
     MYUPLOADSFILE="$_LTU_MYTMP/$_UPLOADSFILE"
