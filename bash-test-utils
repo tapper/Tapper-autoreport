@@ -1094,6 +1094,10 @@ get_tapdata_counter () {
      echo ${#TAPDATA[@]}
 }
 
+get_benchmarkdata_counter () {
+     echo ${#BENCHMARKDATA[@]}
+}
+
 append_tap () {
     tapline="${1:-'not ok - unknown TAP line in utility function append_tap'}"
     TAP=( "${TAP[@]}" "$tapline" )
@@ -1102,6 +1106,38 @@ append_tap () {
 append_tapdata () {
     tapline="${1:-'not ok - unknown TAP line in utility function append_tapdata'}"
     TAPDATA=( "${TAPDATA[@]}" "$tapline" )
+}
+
+append_benchmarkdata () {
+    [ -z "$1" ] && return $_FAILURE
+    have_NAME=0
+    have_VALUE=0
+    have_undef_key=0
+    have_undef_value=0
+    for kv in "$@" ; do
+        k=$(cut -d: -f1  <<<$kv)
+        v=$(cut -d: -f2- <<<$kv)
+        if [ "$k" == "NAME"  ] ; then have_NAME=1  ; fi
+        if [ "$k" == "VALUE" ] ; then have_VALUE=1 ; fi
+        if [ -z "$k" ] ; then have_undef_key=1   ; fi
+        if [ -z "$v" ] ; then have_undef_value=1 ; fi
+    done
+
+    if [ "x$have_NAME" == "x0" -o "x$have_VALUE" == "x0" -o "x$have_undef_key" == "x1" -o "x$have_undef_value" == "x1" ] ; then
+        diag "Error in benchmarkdata:" $(for kv in "$@" ; do echo "'$kv'" ; done)
+        if [ "x$have_NAME"        == "x0" ] ; then diag ".  missing key 'NAME'" ; fi
+        if [ "x$have_VALUE"       == "x0" ] ; then diag ".  missing key 'VALUE'" ; fi
+        if [ "x$have_undef_key"   == "x1" ] ; then diag ".  contains undefined keys" ; fi
+        if [ "x$have_undef_value" == "x1" ] ; then diag ".  contains undefined values" ; fi
+        return $_FAILURE
+    fi
+
+    BENCHMARKDATA=( "${BENCHMARKDATA[@]}" "-" )
+    for kv in "$@" ; do
+        k=$(cut -d: -f1  <<<$kv)
+        v=$(cut -d: -f2- <<<$kv)
+        BENCHMARKDATA=( "${BENCHMARKDATA[@]}" "  $k: '$v'" )
+    done
 }
 
 append_comment () {
@@ -1584,7 +1620,7 @@ autoreport_main () {
     # ==================== prepare plan
 
     # count of tests until "END of own tests"
-    MYPLAN=2
+    MYPLAN=3   # initialize with count of default entries
     prepare_plan
     echo "TAP Version 13"
     echo "1..$PLAN"
@@ -1635,6 +1671,20 @@ autoreport_main () {
         done
     fi
     echo "  ..."
+
+    # ==================== additional benchmark data ====================
+    echo "ok - benchmarkdata"
+    BENCHMARKDATACOUNT=${#BENCHMARKDATA[@]}
+    if [ "$BENCHMARKDATACOUNT" -gt 0 ] ; then
+        echo "  ---"
+        echo "  benchmarkdata:"
+        if [ "$BENCHMARKDATACOUNT" -gt 0 ] ; then
+            for l in $(seq 0 $(($BENCHMARKDATACOUNT - 1))) ; do
+                echo "    ${BENCHMARKDATA[l]}"
+            done
+        fi
+        echo "  ..."
+    fi
 
     # ==================== remaining output ====================
     OUTPUTCOUNT=${#OUTPUT[@]}
