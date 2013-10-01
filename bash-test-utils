@@ -1153,6 +1153,28 @@ isnt () {
     fi
 }
 
+# checks for success, usually the last command's error code
+has_success () {
+    success="${1:-0}"
+    if [ "$success" = "0" ] ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
+# stops testscript if no successful errorcode
+require_success () {
+    success="${1:-0}"
+    explanation="${2:-successful error code required ($success)}"
+    if has_success "$success" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_success $success" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 require_ok () {
     success="${1:-0}"
     msg="${2:-unknown}"
