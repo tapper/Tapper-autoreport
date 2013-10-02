@@ -761,6 +761,26 @@ has_program () {
     fi
 }
 
+# installs program (assume deb/rpm packagename == program name)
+install_program () {
+    program="$1"
+    if [ -z "$program" ] ; then
+        diag "install_program: no program name provided"
+        return
+    fi
+
+    if ! has_program $program ; then
+        print_and_diag "INSTALLING program: $program ..."
+        if has_program "aptitude" ; then
+            sudo aptitude update
+            sudo aptitude -y install $program
+        elif has_program "yum" ; then
+            sudo yum -y update
+            sudo yum -y install $program
+        fi
+    fi
+}
+
 # stops testscript if program not available
 require_program () {
     program="${1:-UNKNOWNPROGRAM}"
