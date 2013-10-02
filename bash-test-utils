@@ -1115,6 +1115,14 @@ diag () {
     done <<< "${@}"
 }
 
+print_and_diag () {
+    while read line
+    do
+        echo "$line"
+        append_comment "$line"
+    done <<< "${@}"
+}
+
 is () {
     A="${1:-}"
     B="${2:-}"
