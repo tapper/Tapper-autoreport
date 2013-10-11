@@ -1537,7 +1537,7 @@ autoreport_main () {
     # ,==================== BEGIN of own tests ====================
     # |
     #
-    echo "ok - autoreport"
+    echo "ok - survived"
     #
     # |
     # `==================== END of own tests ====================
