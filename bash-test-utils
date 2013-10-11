@@ -1715,7 +1715,7 @@ autoreport_main () {
     BENCHMARKDATACOUNT=${#BENCHMARKDATA[@]}
     if [ "$BENCHMARKDATACOUNT" -gt 0 ] ; then
         echo "  ---"
-        echo "  benchmarkdata:"
+        echo "  BenchmarkAnythingData:"
         if [ "$BENCHMARKDATACOUNT" -gt 0 ] ; then
             for l in $(seq 0 $(($BENCHMARKDATACOUNT - 1))) ; do
                 echo "    ${BENCHMARKDATA[l]}"
