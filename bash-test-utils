@@ -1136,9 +1136,16 @@ get_benchmarkdata_counter () {
      echo ${#BENCHMARKDATA[@]}
 }
 
+append_timestamp () {
+    append_comment "Test-Timestamp: $(date '+%s')"
+}
+
 append_tap () {
     tapline="${1:-'not ok - unknown TAP line in utility function append_tap'}"
     TAP=( "${TAP[@]}" "$tapline" )
+    if [ "x1" = "x$GENERATE_TIMESTAMPS" ] ; then
+        append_timestamp
+    fi
 }
 
 append_tapdata () {
