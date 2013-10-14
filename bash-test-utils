@@ -753,8 +753,8 @@ require_module () {
 
 # checks whether the program is available
 has_program () {
-    program="${1:-UNKNOWNPROGRAM}"
-    if which "$program" > /dev/null 2>&1 ; then
+    _has_program_program="${1:-UNKNOWNPROGRAM}"
+    if which "$_has_program_program" > /dev/null 2>&1 ; then
         return $_SUCCESS
     else
         return $_FAILURE
@@ -763,20 +763,22 @@ has_program () {
 
 # installs program (assume deb/rpm packagename == program name)
 install_program () {
-    program="$1"
-    if [ -z "$program" ] ; then
+    _install_program_program="$1"
+    if [ -z "$_install_program_program" ] ; then
         diag "install_program: no program name provided"
         return
     fi
 
-    if ! has_program $program ; then
-        print_and_diag "INSTALLING program: $program ..."
+    if ! has_program "$program" ; then
+        print_and_diag "INSTALLING program: $_install_program_program ..."
         if has_program "aptitude" ; then
             sudo aptitude update
-            sudo aptitude -y install $program
+            sudo aptitude -y install "$_install_program_program"
         elif has_program "yum" ; then
             sudo yum -y update
-            sudo yum -y install $program
+            sudo yum -y install "$_install_program_program"
+        else
+            print_and_diag "Neither 'aptitude' nor 'yum' available."
         fi
     fi
 }
