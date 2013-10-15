@@ -1273,6 +1273,7 @@ require_kernel_release_min () {
 initialize_variables_once () {
     _LTU_EXITCODE=0
     _LTU_FILECOUNT=0
+    _LTU_ORIGINAL_STARTDIR=$(pwd)
 }
 
 prepare_information () {
@@ -1636,6 +1637,8 @@ done_testing_to_file () {
 }
 
 done_testing () {
+    cd $_LTU_ORIGINAL_STARTDIR
+
     if [ "x$CREATE_RESULTS_FILE" = "x1" ] ; then
         done_testing_to_file "${@}"
     else
