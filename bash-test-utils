@@ -1115,12 +1115,27 @@ diag () {
     done <<< "${@}"
 }
 
+diag_file () {
+    while read line
+    do
+        append_comment "$line"
+    done < "$0"
+}
+
 print_and_diag () {
     while read line
     do
-        echo "$line"
+        echo "# $line"
         append_comment "$line"
     done <<< "${@}"
+}
+
+print_and_diag_file () {
+    while read line
+    do
+        echo "# $line"
+        append_comment "$line"
+    done < "$1"
 }
 
 is () {
