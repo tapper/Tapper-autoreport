@@ -890,6 +890,19 @@ get_largest_partition () {
     echo $(df |grep -v -i available | awk '{print $4, $1, $6}'| sort -t" " -k 1 -n|tail -1|cut -d" " -f3)
 }
 
+get_largest_user_tempdir () {
+    _BTU_LARGESTPARTITION=$(get_largest_partition)
+    _BTU_TEMP=${_BTU_LARGESTPARTITION:-${TEMP:-/tmp}}
+    _BTU_LARGETEMP=$(mktemp -q -d --tmpdir=$_BTU_TEMP)
+    if [ ! -w "$_BTU_LARGETEMP" ] ; then
+        _BTU_LARGETEMP=$(sudo -n mktemp -q -d --tmpdir=$_BTU_TEMP)
+        if [ $? ] ; then
+            sudo chown $USER "$_BTU_LARGETEMP"
+        fi
+    fi
+    echo "$_BTU_LARGETEMP"
+}
+
 get_first_file () {
     for i in $(seq 1 $#) ; do
         file=${!i}
