@@ -886,6 +886,10 @@ require_root () {
     fi
 }
 
+get_largest_partition () {
+    echo $(df |grep -v -i available | awk '{print $4, $1, $6}'| sort -t" " -k 1 -n|tail -1|cut -d" " -f3)
+}
+
 get_first_file () {
     for i in $(seq 1 $#) ; do
         file=${!i}
