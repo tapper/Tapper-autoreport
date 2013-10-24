@@ -761,6 +761,42 @@ has_program () {
     fi
 }
 
+get_distro () {
+    if grep -q "Amazon Linux" /etc/issue ; then
+        echo ALinux
+    elif grep -q "Ubuntu" /etc/issue ; then
+        echo Ubuntu
+    elif grep -q "Debian" /etc/issue ; then
+        echo Debian
+    fi
+}
+
+get_pkg_for_program () {
+    _BTU_program="$1"
+    _BTU_distro=$(get_distro)
+
+    # Mapping of programs to RPM/DEB packages if pkg differs from program name
+    declare -A program_package_mapping_ALinux
+    declare -A program_package_mapping_Debian
+    program_package_mapping_ALinux=( ["g++"]="gcc-c++" )
+    program_package_mapping_Debian=( ["g++"]="g++" )
+
+    _BTU_pkg=""
+    if [ "xDebian" == "x$_BTU_distro" -o "xUbuntu" == "x$_BTU_distro"  ] ; then
+        _BTU_pkg="${program_package_mapping_Debian[$_BTU_program]}"
+
+    elif [ "xALinux" == "x$_BTU_distro" ] ; then
+        _BTU_pkg="${program_package_mapping_ALinux[$_BTU_program]}"
+
+    fi
+
+    if [ -z "$_BTU_pkg" ] ; then
+        _BTU_pkg="$_BTU_program"
+    fi
+
+    echo "$_BTU_pkg"
+}
+
 # installs program (assume deb/rpm packagename == program name)
 install_program () {
     _install_program_program="$1"
