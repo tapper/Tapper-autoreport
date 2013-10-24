@@ -770,13 +770,15 @@ install_program () {
     fi
 
     if ! has_program "$program" ; then
-        print_and_diag "INSTALLING program: $_install_program_program ..."
+        _install_program_pkg=$(get_pkg_for_program $_install_program_program)
+        print_and_diag "INSTALLING program: $_install_program_program (package '$_install_program_pkg') ..."
+
         if has_program "aptitude" ; then
             sudo aptitude update
-            sudo aptitude -y install "$_install_program_program"
+            sudo aptitude -y install "$_install_program_pkg"
         elif has_program "yum" ; then
             sudo yum -y update
-            sudo yum -y install "$_install_program_program"
+            sudo yum -y install "$_install_program_pkg"
         else
             print_and_diag "Neither 'aptitude' nor 'yum' available."
         fi
