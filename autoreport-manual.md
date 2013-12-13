@@ -161,6 +161,14 @@ See also "require_ok" below.
 Evaluates the first argument with Shell inverse boolean semantics (0
 is false) and appends a corresponding TAP line.
 
+#### is ARG1 ARG2 "some description"
+
+Tests if ARG1 and ARG2 are equal and appends a corresponding TAP line.
+
+#### isnt ARG1 ARG2 "some description"
+
+Tests if ARG1 and ARG2 are not equal and appends a corresponding TAP line.
+
 #### append_tap "ok - some description"
 
 Appends a complete TAP line where you have taken care for the
@@ -175,6 +183,10 @@ after the last added TAP line so it can be used for diagnostics.
 
 Appends a key:value line at the final tapdata YAML block. The key must
 start with letter and consist of only alphanum an underscore.
+
+#### diag
+
+Appends a diagnostic comment that starts with "#".
 
 ### require_* functions
 
@@ -241,6 +253,10 @@ test is skipped.
 
 Enables cpufreq and also core boosting. In case of errors the calling
 test is skipped.
+
+#### require_kernel_release_min
+
+Verify that the current LK release is less than version number.
 
 #### require_kernel_release_min_1
 
@@ -371,6 +387,10 @@ exists and is readable.
 
 Returns 0 (shell TRUE) if WORD appears in "SPACE SEPARATED LIST OF
 WORDS". Remember the usual shell quoting rules.
+
+#### get_kernel_release
+
+Prints the entire kernel verion from uname -r.
 
 #### get_kernel_release_1
 
