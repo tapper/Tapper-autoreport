@@ -218,6 +218,10 @@ Verifies that the string "foo" occurs in `/proc/cpuinfo` flags section.
 Verify that regex "^CONFIG_FOO=." occurs in /proc/config.gz or
 /boot/config/$(uname -r).
 
+#### require_file "foo"
+
+Verify that the file "foo" exists.
+
 #### require_program "foo"
 
 Verify that the program "foo" is available.
@@ -291,6 +295,14 @@ Verify if we are in a virtualized guest (Xen or KVM).
 
 Verify if we are in a Tapper automation guest environment.
 
+#### require_vendor_amd 
+
+Verify that the CPU vendor is AMD.
+
+#### require_vendor_intel
+
+Verify that the CPU vendor is Intel.
+
 ### request_* functions
 
 All `request_*` functions try to enable something and if that fails
@@ -327,6 +339,10 @@ section.
 Returns 0 (shell TRUE) if regex "^CONFIG_FOO=." occurs in
 /proc/config.gz or /boot/config/$(uname -r).
 
+#### has_file "foo"
+
+Return 0 (shell TRUE) if the file "foo" exists.
+
 #### has_program "foo"
 
 Return 0 (shell TRUE) if the program "foo" is available.
@@ -355,6 +371,10 @@ Returns 0 (shell TRUE) if vendor is Intel.
 #### vendor_amd
 
 Returns 0 (shell TRUE) if vendor is AMD.
+
+#### arm_cpu
+
+Returns 0 (shell TRUE) if processor type is ARM.
 
 #### get_random_number [ MAX ]
 
