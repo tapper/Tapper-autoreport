@@ -218,6 +218,11 @@ Verifies that the string "foo" occurs in `/proc/cpuinfo` flags section.
 Verify that regex "^CONFIG_FOO=." occurs in /proc/config.gz or
 /boot/config/$(uname -r).
 
+#### require_kernel_sources
+
+Verify that the Linux kernel sources are installed under the
+/lib/modules directory.
+
 #### require_file "foo"
 
 Verify that the file "foo" exists.
@@ -303,6 +308,14 @@ Verify that the CPU vendor is AMD.
 
 Verify that the CPU vendor is Intel.
 
+#### require_x86_64
+
+Verify that the CPU architecture is x86_64.
+
+#### require_module "MODULE_FOO"
+
+Verify that Linux kernel module MODULE_FOO is loaded.
+
 ### request_* functions
 
 All `request_*` functions try to enable something and if that fails
@@ -329,6 +342,11 @@ the behaviour like the require_* functions do.
 Returns 0 (shell TRUE) if L3 cache is available (checked in
 /sys/devices/system/cpu/cpu0/cache/index3).
 
+#### has_module "MODULE_FOO"
+
+Returns 0 (shell TRUE) if Linux kernel module MODULE_FOO
+is loaded.
+
 #### has_cpufeature "foo"
 
 Returns 0 (shell TRUE) if string "foo" occurs in `/proc/cpuinfo` flags
@@ -338,6 +356,11 @@ section.
 
 Returns 0 (shell TRUE) if regex "^CONFIG_FOO=." occurs in
 /proc/config.gz or /boot/config/$(uname -r).
+
+#### has_kernel_sources
+
+Returns 0 (shell TRUE) if the Linux kernel sources are
+installed under the /lib/modules directory.
 
 #### has_file "foo"
 
@@ -388,6 +411,22 @@ Print cpu family from `/proc/cpuinfo`.
 
 Print cpu family from /proc/cpuinfo in hex syntax (0x...).
 
+#### get_cpu_stepping
+
+Print cpu stepping from /proc/cpuinfo
+
+#### get_cpu_model
+
+Print cpu model from /proc/cpuinfo in decimal.
+
+#### get_cpu_model_hex
+
+Print cpu model from /proc/cpuinfo in hex.
+
+#### get_number_cpus
+
+Print number of cpus.
+
 #### cpu_family_min [ MINFAMILY ]
 
 Returns 0 (shell TRUE) if cpu family from /proc/cpuinfo is greater or
@@ -397,6 +436,16 @@ equal to MINFAMILY. Defaults to 0.
 
 Returns 0 (shell TRUE) if cpu family from /proc/cpuinfo is less or
 equal to MAXFAMILY. Defaults to 999.
+
+#### cpu_model_min [ MINMODEL ]
+
+Returns 0 (shell TRUE) if cpu model from /proc/cpuinfo is greater or
+equal to MINMODEL. Defaults to 0.
+
+#### cpu_model_max [ MAXMODEL ]
+
+Returns 0 (shell TRUE) if cpu model from /proc/cpuinfo is less or
+equal to MAXMODEL. Defaults to 2,457.
 
 #### get_first_file [ LIST OF FILENAMES ]
 
@@ -439,6 +488,16 @@ Check if we are in a virtualized guest (Xen or KVM).
 #### is_running_in_tapper_guest
 
 Check if we are in a Tapper automation guest environment.
+
+#### is_x86_64
+
+Check if we are running on an x86_64 machine. Returns 0 (shell TRUE)
+if CPU architecture is x86_64.
+
+#### prepare_kernel_sources
+
+Prepares the Linux kernel sources under the /usr/src/linux directory
+using the make command.
 
 ## INFLUENCING BEHAVIOUR
 
