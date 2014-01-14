@@ -895,10 +895,8 @@ get_largest_user_tempdir () {
     _BTU_TEMP=${_BTU_LARGESTPARTITION:-${TEMP:-/tmp}}
     _BTU_LARGETEMP=$(mktemp -q -d --tmpdir=$_BTU_TEMP)
     if [ ! -w "$_BTU_LARGETEMP" ] ; then
-        _BTU_LARGETEMP=$(sudo -n mktemp -q -d --tmpdir=$_BTU_TEMP)
-        if [ $? ] ; then
-            sudo chown $USER "$_BTU_LARGETEMP"
-        fi
+        _BTU_LARGETEMP=$(sudo mktemp -q -d --tmpdir=$_BTU_TEMP)
+        sudo chown $USER "$_BTU_LARGETEMP"
     fi
     echo "$_BTU_LARGETEMP"
 }
