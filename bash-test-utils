@@ -30,6 +30,9 @@
 _SUCCESS=0
 _FAILURE=1
 
+declare -A program_package_mapping_ALinux
+declare -A program_package_mapping_Debian
+
 run_hook () {
     _hook=${1:-UNDEFINED}
     _TA_INC="bash-test-utils.hooks/$TESTUTIL_HOOKS/$_hook"
@@ -776,17 +779,17 @@ get_pkg_for_program () {
     _BTU_distro=$(get_distro)
 
     # Mapping of programs to RPM/DEB packages if pkg differs from program name
-    declare -A program_package_mapping_ALinux
-    declare -A program_package_mapping_Debian
-    program_package_mapping_ALinux=( ["g++"]="gcc-c++" )
-    program_package_mapping_Debian=( ["g++"]="g++" )
+    declare -A default_program_package_mapping_ALinux
+    declare -A default_program_package_mapping_Debian
+    default_program_package_mapping_ALinux=( ["g++"]="gcc-c++" )
+    default_program_package_mapping_Debian=( ["g++"]="g++" )
 
     _BTU_pkg=""
     if [ "xDebian" == "x$_BTU_distro" -o "xUbuntu" == "x$_BTU_distro"  ] ; then
-        _BTU_pkg="${program_package_mapping_Debian[$_BTU_program]}"
+        _BTU_pkg="${program_package_mapping_Debian[$_BTU_program]:-${default_program_package_mapping_Debian[$_BTU_program]}}"
 
     elif [ "xALinux" == "x$_BTU_distro" ] ; then
-        _BTU_pkg="${program_package_mapping_ALinux[$_BTU_program]}"
+        _BTU_pkg="${program_package_mapping_ALinux[$_BTU_program]:-${default_program_package_mapping_ALinux[$_BTU_program]}}"
 
     fi
 
