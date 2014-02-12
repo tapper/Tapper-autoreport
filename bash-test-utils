@@ -795,6 +795,61 @@ require_file () {
     fi
 }
 
+# get environment variable
+get_env () {
+    _ltu_get_env_name="${1:-}"
+    explanation="${2:-No environment variable $_ltu_get_env_name}"
+
+    echo "${!_ltu_get_env_name}"
+    return
+}
+
+# return whether environment variable is set to expected value
+has_env () {
+    _ltu_require_env_name="${1:-}"
+    _ltu_require_env_expected_value="${2:-}"
+    _ltu_require_env_actual_value="${!_ltu_require_env_name}"
+    if [ "x$_ltu_require_env_actual_value" = "x$_ltu_require_env_expected_value" ] ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
+# stops testscript if environment variable does not equal a particular value
+require_env_eq () {
+    _ltu_require_env_name="${1:-}"
+    _ltu_require_env_expected_value="${2:-}"
+    _ltu_require_env_actual_value="${!_ltu_require_env_name}"
+    explanation="require environment variable $_ltu_require_env_name = '$_ltu_require_env_expected_value' (actual value: '$_ltu_require_env_actual_value')"
+
+    if has_env "$_ltu_require_env_name" "$_ltu_require_env_expected_value" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then
+            ok $_SUCCESS "$explanation"
+        fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if environment variable equals a particular value
+require_env_not_eq () {
+    _ltu_require_env_name="${1:-}"
+    _ltu_require_env_expected_value="${2:-}"
+    _ltu_require_env_actual_value="${!_ltu_require_env_name}"
+    explanation="require environment variable $_ltu_require_env_name != '$_ltu_require_env_expected_value' (actual value: '$_ltu_require_env_actual_value')"
+
+    if ! has_env "$_ltu_require_env_name" "$_ltu_require_env_expected_value" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then
+            ok $_SUCCESS "$explanation"
+        fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 # checks whether the script's criticality is in allowed range
 has_crit_level () {
     _ta_crit_level="${1:-5}"
