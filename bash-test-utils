@@ -987,7 +987,7 @@ autoreport_skip_all () {
     if [[ -n $EXIT_ON_SKIPALL ]]; then
         exit 254
     else
-        autoreport_start
+        done_testing
         exit 0
     fi
 }
@@ -1073,7 +1073,7 @@ require_ok () {
     if [[ -n $EXIT_ON_SKIPALL ]]; then
         exit 254
     else
-        autoreport_start
+        done_testing
         exit 0
     fi
 }
@@ -1516,11 +1516,6 @@ upload_file () {
 }
 
 # ===== main =========================================
-
-autoreport_start () {
-    prepare_start "${@}"
-    autoreport_main
-}
 
 done_testing_to_stdout () {
     prepare_start "${@}"
