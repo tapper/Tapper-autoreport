@@ -30,6 +30,9 @@
 _SUCCESS=0
 _FAILURE=1
 
+declare -A program_package_mapping_ALinux
+declare -A program_package_mapping_Debian
+
 run_hook () {
     _hook=${1:-UNDEFINED}
     _TA_INC="bash-test-utils.hooks/$TESTUTIL_HOOKS/$_hook"
@@ -753,11 +756,71 @@ require_module () {
 
 # checks whether the program is available
 has_program () {
-    program="${1:-UNKNOWNPROGRAM}"
-    if which "$program" > /dev/null 2>&1 ; then
+    _has_program_program="${1:-UNKNOWNPROGRAM}"
+    if which "$_has_program_program" > /dev/null 2>&1 ; then
         return $_SUCCESS
     else
         return $_FAILURE
+    fi
+}
+
+get_distro () {
+    if grep -q "Amazon Linux" /etc/issue ; then
+        echo ALinux
+    elif grep -q "Ubuntu" /etc/issue ; then
+        echo Ubuntu
+    elif grep -q "Debian" /etc/issue ; then
+        echo Debian
+    fi
+}
+
+get_pkg_for_program () {
+    _BTU_program="$1"
+    _BTU_distro=$(get_distro)
+
+    # Mapping of programs to RPM/DEB packages if pkg differs from program name
+    declare -A default_program_package_mapping_ALinux
+    declare -A default_program_package_mapping_Debian
+    default_program_package_mapping_ALinux=( ["g++"]="gcc-c++" )
+    default_program_package_mapping_Debian=( ["g++"]="g++" )
+
+    _BTU_pkg=""
+    if [ "xDebian" == "x$_BTU_distro" -o "xUbuntu" == "x$_BTU_distro"  ] ; then
+        _BTU_pkg="${program_package_mapping_Debian[$_BTU_program]:-${default_program_package_mapping_Debian[$_BTU_program]}}"
+
+    elif [ "xALinux" == "x$_BTU_distro" ] ; then
+        _BTU_pkg="${program_package_mapping_ALinux[$_BTU_program]:-${default_program_package_mapping_ALinux[$_BTU_program]}}"
+
+    fi
+
+    if [ -z "$_BTU_pkg" ] ; then
+        _BTU_pkg="$_BTU_program"
+    fi
+
+    echo "$_BTU_pkg"
+}
+
+# installs program (assume deb/rpm packagename == program name)
+install_program () {
+    _install_program_program="$1"
+    if [ -z "$_install_program_program" ] ; then
+        diag "install_program: no program name provided"
+        return
+    fi
+
+    if ! has_program "$program" ; then
+        _install_program_pkg=$(get_pkg_for_program $_install_program_program)
+        print_and_diag "INSTALLING program: $_install_program_program (package '$_install_program_pkg') ..."
+
+        if has_program "aptitude" ; then
+            sudo aptitude update
+            sudo aptitude -y install "$_install_program_pkg"
+        elif has_program "yum" ; then
+            sudo yum -y update
+            sudo yum -y install "$_install_program_pkg"
+        else
+            print_and_diag "Neither 'aptitude' nor 'yum' available."
+        fi
     fi
 }
 
@@ -789,6 +852,61 @@ require_file () {
     explanation="${2:-Missing file $file}"
     if has_file "$file" ; then
         if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_file $file" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# get environment variable
+get_env () {
+    _ltu_get_env_name="${1:-}"
+    explanation="${2:-No environment variable $_ltu_get_env_name}"
+
+    echo "${!_ltu_get_env_name}"
+    return
+}
+
+# return whether environment variable is set to expected value
+has_env () {
+    _ltu_require_env_name="${1:-}"
+    _ltu_require_env_expected_value="${2:-}"
+    _ltu_require_env_actual_value="${!_ltu_require_env_name}"
+    if [ "x$_ltu_require_env_actual_value" = "x$_ltu_require_env_expected_value" ] ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
+# stops testscript if environment variable does not equal a particular value
+require_env_eq () {
+    _ltu_require_env_name="${1:-}"
+    _ltu_require_env_expected_value="${2:-}"
+    _ltu_require_env_actual_value="${!_ltu_require_env_name}"
+    explanation="require environment variable $_ltu_require_env_name = '$_ltu_require_env_expected_value' (actual value: '$_ltu_require_env_actual_value')"
+
+    if has_env "$_ltu_require_env_name" "$_ltu_require_env_expected_value" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then
+            ok $_SUCCESS "$explanation"
+        fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
+# stops testscript if environment variable equals a particular value
+require_env_not_eq () {
+    _ltu_require_env_name="${1:-}"
+    _ltu_require_env_expected_value="${2:-}"
+    _ltu_require_env_actual_value="${!_ltu_require_env_name}"
+    explanation="require environment variable $_ltu_require_env_name != '$_ltu_require_env_expected_value' (actual value: '$_ltu_require_env_actual_value')"
+
+    if ! has_env "$_ltu_require_env_name" "$_ltu_require_env_expected_value" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then
+            ok $_SUCCESS "$explanation"
+        fi
         return $_SUCCESS
     else
         autoreport_skip_all "$explanation"
@@ -829,6 +947,21 @@ require_root () {
     else
         autoreport_skip_all "$explanation"
     fi
+}
+
+get_largest_partition () {
+    echo $(df |grep -v -i available | awk '{print $4, $1, $6}'| sort -t" " -k 1 -n|tail -1|cut -d" " -f3)
+}
+
+get_largest_user_tempdir () {
+    _BTU_LARGESTPARTITION=$(get_largest_partition)
+    _BTU_TEMP=${_BTU_LARGESTPARTITION:-${TEMP:-/tmp}}
+    _BTU_LARGETEMP=$(mktemp -q -d --tmpdir=$_BTU_TEMP)
+    if [ ! -w "$_BTU_LARGETEMP" ] ; then
+        _BTU_LARGETEMP=$(sudo mktemp -q -d --tmpdir=$_BTU_TEMP)
+        sudo chown $USER "$_BTU_LARGETEMP"
+    fi
+    echo "$_BTU_LARGETEMP"
 }
 
 get_first_file () {
@@ -987,7 +1120,7 @@ autoreport_skip_all () {
     if [[ -n $EXIT_ON_SKIPALL ]]; then
         exit 254
     else
-        autoreport_start
+        done_testing
         exit 0
     fi
 }
@@ -1002,14 +1135,57 @@ get_tapdata_counter () {
      echo ${#TAPDATA[@]}
 }
 
+get_benchmarkdata_counter () {
+     echo ${#BENCHMARKDATA[@]}
+}
+
+append_timestamp () {
+    append_comment "Test-Timestamp: $(date '+%s')"
+}
+
 append_tap () {
     tapline="${1:-'not ok - unknown TAP line in utility function append_tap'}"
     TAP=( "${TAP[@]}" "$tapline" )
+    if [ "x1" = "x$GENERATE_TIMESTAMPS" ] ; then
+        append_timestamp
+    fi
 }
 
 append_tapdata () {
     tapline="${1:-'not ok - unknown TAP line in utility function append_tapdata'}"
     TAPDATA=( "${TAPDATA[@]}" "$tapline" )
+}
+
+append_benchmarkdata () {
+    [ -z "$1" ] && return $_FAILURE
+    have_NAME=0
+    have_VALUE=0
+    have_undef_key=0
+    have_undef_value=0
+    for kv in "$@" ; do
+        k=$(cut -d: -f1  <<<$kv)
+        v=$(cut -d: -f2- <<<$kv)
+        if [ "$k" == "NAME"  ] ; then have_NAME=1  ; fi
+        if [ "$k" == "VALUE" ] ; then have_VALUE=1 ; fi
+        if [ -z "$k" ] ; then have_undef_key=1   ; fi
+        if [ -z "$v" ] ; then have_undef_value=1 ; fi
+    done
+
+    if [ "x$have_NAME" == "x0" -o "x$have_VALUE" == "x0" -o "x$have_undef_key" == "x1" -o "x$have_undef_value" == "x1" ] ; then
+        diag "Error in benchmarkdata:" $(for kv in "$@" ; do echo "'$kv'" ; done)
+        if [ "x$have_NAME"        == "x0" ] ; then diag ".  missing key 'NAME'" ; fi
+        if [ "x$have_VALUE"       == "x0" ] ; then diag ".  missing key 'VALUE'" ; fi
+        if [ "x$have_undef_key"   == "x1" ] ; then diag ".  contains undefined keys" ; fi
+        if [ "x$have_undef_value" == "x1" ] ; then diag ".  contains undefined values" ; fi
+        return $_FAILURE
+    fi
+
+    BENCHMARKDATA=( "${BENCHMARKDATA[@]}" "-" )
+    for kv in "$@" ; do
+        k=$(cut -d: -f1  <<<$kv)
+        v=$(cut -d: -f2- <<<$kv)
+        BENCHMARKDATA=( "${BENCHMARKDATA[@]}" "  $k: '$v'" )
+    done
 }
 
 append_comment () {
@@ -1023,6 +1199,29 @@ diag () {
     do
         append_comment "$line"
     done <<< "${@}"
+}
+
+diag_file () {
+    while read line
+    do
+        append_comment "$line"
+    done < "$0"
+}
+
+print_and_diag () {
+    while read line
+    do
+        echo "# $line"
+        append_comment "$line"
+    done <<< "${@}"
+}
+
+print_and_diag_file () {
+    while read line
+    do
+        echo "# $line"
+        append_comment "$line"
+    done < "$1"
 }
 
 is () {
@@ -1055,6 +1254,28 @@ isnt () {
     fi
 }
 
+# checks for success, usually the last command's error code
+has_success () {
+    success="${1:-0}"
+    if [ "$success" = "0" ] ; then
+        return $_SUCCESS
+    else
+        return $_FAILURE
+    fi
+}
+
+# stops testscript if no successful errorcode
+require_success () {
+    success="${1:-0}"
+    explanation="${2:-successful error code required ($success)}"
+    if has_success "$success" ; then
+        if [ "x1" = "x$REQUIRES_GENERATE_TAP" ] ; then ok $_SUCCESS "require_success $success" ; fi
+        return $_SUCCESS
+    else
+        autoreport_skip_all "$explanation"
+    fi
+}
+
 require_ok () {
     success="${1:-0}"
     msg="${2:-unknown}"
@@ -1073,7 +1294,7 @@ require_ok () {
     if [[ -n $EXIT_ON_SKIPALL ]]; then
         exit 254
     else
-        autoreport_start
+        done_testing
         exit 0
     fi
 }
@@ -1203,6 +1424,7 @@ require_kernel_release_min () {
 initialize_variables_once () {
     _LTU_EXITCODE=0
     _LTU_FILECOUNT=0
+    _LTU_ORIGINAL_STARTDIR=$(pwd)
 }
 
 prepare_information () {
@@ -1446,7 +1668,7 @@ autoreport_main () {
     # ==================== prepare plan
 
     # count of tests until "END of own tests"
-    MYPLAN=2
+    MYPLAN=3   # initialize with count of default entries
     prepare_plan
     echo "TAP Version 13"
     echo "1..$PLAN"
@@ -1466,7 +1688,7 @@ autoreport_main () {
     # ,==================== BEGIN of own tests ====================
     # |
     #
-    echo "ok - autoreport"
+    echo "ok - survived"
     #
     # |
     # `==================== END of own tests ====================
@@ -1498,6 +1720,20 @@ autoreport_main () {
     fi
     echo "  ..."
 
+    # ==================== additional benchmark data ====================
+    echo "ok - benchmarkdata"
+    BENCHMARKDATACOUNT=${#BENCHMARKDATA[@]}
+    if [ "$BENCHMARKDATACOUNT" -gt 0 ] ; then
+        echo "  ---"
+        echo "  BenchmarkAnythingData:"
+        if [ "$BENCHMARKDATACOUNT" -gt 0 ] ; then
+            for l in $(seq 0 $(($BENCHMARKDATACOUNT - 1))) ; do
+                echo "    ${BENCHMARKDATA[l]}"
+            done
+        fi
+        echo "  ..."
+    fi
+
     # ==================== remaining output ====================
     OUTPUTCOUNT=${#OUTPUT[@]}
     for l in $(seq 0 $(($OUTPUTCOUNT - 1))) ; do
@@ -1516,11 +1752,6 @@ upload_file () {
 }
 
 # ===== main =========================================
-
-autoreport_start () {
-    prepare_start "${@}"
-    autoreport_main
-}
 
 done_testing_to_stdout () {
     prepare_start "${@}"
@@ -1571,6 +1802,8 @@ done_testing_to_file () {
 }
 
 done_testing () {
+    cd $_LTU_ORIGINAL_STARTDIR
+
     if [ "x$CREATE_RESULTS_FILE" = "x1" ] ; then
         done_testing_to_file "${@}"
     else
